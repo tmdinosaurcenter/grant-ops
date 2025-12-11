@@ -53,7 +53,7 @@ const crawler = new PlaywrightCrawler({
   launchContext: {
     launcher: firefox,
     launchOptions: await launchOptions({
-      headless: false,
+      headless: true,
       humanize: true,
       geoip: true,
     }),

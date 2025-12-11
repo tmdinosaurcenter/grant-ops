@@ -21,7 +21,9 @@ RESUME_JSON_PATH = (
 _custom_output_filename = os.getenv("OUTPUT_FILENAME")
 OUTPUT_FILENAME = _custom_output_filename if _custom_output_filename else "resume.pdf"
 
-OUTPUT_DIR = BASE_DIR / "resumes"
+# Output directory - can be overridden by orchestrator
+_custom_output_dir = os.getenv("OUTPUT_DIR")
+OUTPUT_DIR = Path(_custom_output_dir) if _custom_output_dir else BASE_DIR / "resumes"
 
 
 def login(page):

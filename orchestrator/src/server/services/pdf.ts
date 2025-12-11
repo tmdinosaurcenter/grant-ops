@@ -6,12 +6,16 @@
 import { spawn } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { readFile, writeFile, copyFile, access, mkdir } from 'fs/promises';
+import { readFile, writeFile, mkdir, access } from 'fs/promises';
 import { existsSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const RESUME_GEN_DIR = join(__dirname, '../../../../resume-generator');
-const OUTPUT_DIR = join(__dirname, '../../../data/pdfs');
+
+// Paths - can be overridden via env for Docker
+const RESUME_GEN_DIR = process.env.RESUME_GEN_DIR || join(__dirname, '../../../../resume-generator');
+const OUTPUT_DIR = process.env.DATA_DIR 
+  ? join(process.env.DATA_DIR, 'pdfs')
+  : join(__dirname, '../../../data/pdfs');
 
 export interface PdfResult {
   success: boolean;
@@ -55,22 +59,11 @@ export async function generatePdf(
     const tempResumePath = join(RESUME_GEN_DIR, `temp_resume_${jobId}.json`);
     await writeFile(tempResumePath, JSON.stringify(baseResume, null, 2));
     
-    // Generate PDF using Python script
+    // Generate PDF using Python script - output directly to our data folder
     const outputFilename = `resume_${jobId}.pdf`;
     const outputPath = join(OUTPUT_DIR, outputFilename);
     
-    await runPythonPdfGenerator(tempResumePath, outputFilename);
-    
-    // Move generated PDF to our output directory
-    const pythonOutputPath = join(RESUME_GEN_DIR, 'resumes', outputFilename);
-    
-    try {
-      await access(pythonOutputPath);
-      await copyFile(pythonOutputPath, outputPath);
-    } catch {
-      // PDF might already be in the right place or script output different location
-      console.warn('PDF not found at expected Python output location');
-    }
+    await runPythonPdfGenerator(tempResumePath, outputFilename, OUTPUT_DIR);
     
     // Cleanup temp file
     try {
@@ -94,11 +87,12 @@ export async function generatePdf(
  */
 async function runPythonPdfGenerator(
   jsonPath: string,
-  outputFilename: string
+  outputFilename: string,
+  outputDir: string
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Use the virtual environment's Python
-    const pythonPath = join(RESUME_GEN_DIR, '.venv', 'bin', 'python');
+    // Use the virtual environment's Python (or system python in Docker)
+    const pythonPath = process.env.PYTHON_PATH || join(RESUME_GEN_DIR, '.venv', 'bin', 'python');
     
     const child = spawn(pythonPath, ['rxresume_automation.py'], {
       cwd: RESUME_GEN_DIR,
@@ -106,6 +100,7 @@ async function runPythonPdfGenerator(
         ...process.env,
         RESUME_JSON_PATH: jsonPath,
         OUTPUT_FILENAME: outputFilename,
+        OUTPUT_DIR: outputDir,
       },
       stdio: 'inherit',
     });

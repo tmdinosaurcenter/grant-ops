@@ -8,7 +8,11 @@ import { fileURLToPath } from 'url';
 import { existsSync, mkdirSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, '../../../data/jobs.db');
+
+// Database path - can be overridden via env for Docker
+const DB_PATH = process.env.DATA_DIR
+  ? join(process.env.DATA_DIR, 'jobs.db')
+  : join(__dirname, '../../../data/jobs.db');
 
 // Ensure data directory exists
 const dataDir = dirname(DB_PATH);
@@ -45,7 +49,7 @@ const migrations = [
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
-  
+
   `CREATE TABLE IF NOT EXISTS pipeline_runs (
     id TEXT PRIMARY KEY,
     started_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -55,7 +59,7 @@ const migrations = [
     jobs_processed INTEGER NOT NULL DEFAULT 0,
     error_message TEXT
   )`,
-  
+
   `CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status)`,
   `CREATE INDEX IF NOT EXISTS idx_jobs_discovered_at ON jobs(discovered_at)`,
   `CREATE INDEX IF NOT EXISTS idx_pipeline_runs_started_at ON pipeline_runs(started_at)`,

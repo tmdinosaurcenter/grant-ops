@@ -3,8 +3,8 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "outDir": "./dist/server",
-    "rootDir": "./src/server"
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
   "include": ["src/server/**/*", "src/shared/**/*"]
 }

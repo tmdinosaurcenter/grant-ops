@@ -10,7 +10,11 @@ import { existsSync, mkdirSync } from 'fs';
 import * as schema from './schema.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, '../../../data/jobs.db');
+
+// Database path - can be overridden via env for Docker
+const DB_PATH = process.env.DATA_DIR
+  ? join(process.env.DATA_DIR, 'jobs.db')
+  : join(__dirname, '../../../data/jobs.db');
 
 // Ensure data directory exists
 const dataDir = dirname(DB_PATH);

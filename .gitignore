@@ -1,1 +1,10 @@
+# Environment files
+.env
+*.env.local
+
+# Data directory (bind mount in Docker)
+data/
+
+# OS files
 .DS_Store
+Thumbs.db

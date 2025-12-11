@@ -34,7 +34,9 @@ app.use((req, res, next) => {
 app.use('/api', apiRouter);
 
 // Serve static files for generated PDFs
-const pdfDir = join(__dirname, '../../data/pdfs');
+const pdfDir = process.env.DATA_DIR
+  ? join(process.env.DATA_DIR, 'pdfs')
+  : join(__dirname, '../../data/pdfs');
 app.use('/pdfs', express.static(pdfDir));
 
 // Health check
