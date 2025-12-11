@@ -108,12 +108,13 @@ router.addHandler(
         await enqueueLinks({
           urls: [jobUrl],
           userData: {
-              ...jobs[jobs.length - 1],
-              label: "gradcracker-single-job-page"
+            ...jobs[jobs.length - 1],
+            label: "gradcracker-single-job-page"
           },
         });
       }
     }
+
     log.info(`Extracted ${jobs.length} jobs`);
   }
 );

@@ -1,28 +1,51 @@
 // For more information, see https://crawlee.dev/
 import { launchOptions } from "camoufox-js";
-import { PlaywrightCrawler, ProxyConfiguration } from "crawlee";
+import { PlaywrightCrawler } from "crawlee";
 import { firefox } from "playwright";
 
 import { router } from "./routes.js";
 
-const startUrls = [
-  {
-    url: "https://www.gradcracker.com/search/computing-technology/web-development-graduate-jobs-in-north-west?order=dateAdded",
-    userData: { label: "gradcracker-list-page" },
-  },
+// locations
+const locations = [
+  "london-and-south-east",
+  "north-west",
+  "yorkshire",
+  "east-midlands",
+  "west-midlands",
+  "south-west",
 ];
+
+// roles
+const roles = [
+  "web-development",
+  "software-systems",
+];
+
+// combo of locations and roles
+const gradcrackerUrls = locations.flatMap((location) => {
+  return roles.map((role) => {
+    return `https://www.gradcracker.com/search/computing-technology/${role}-graduate-jobs-in-${location}?order=dateAdded`;
+  });
+});
+
+console.log(`Total gradcracker URLs: ${gradcrackerUrls.length}`)
+
+const startUrls = gradcrackerUrls.map((url) => ({
+  url,
+  userData: { label: "gradcracker-list-page" },
+}));
 
 const crawler = new PlaywrightCrawler({
   // proxyConfiguration: new ProxyConfiguration({ proxyUrls: ['...'] }),
   requestHandler: router,
   // Comment this option to scrape the full website.
-  maxRequestsPerCrawl: 20,
+  maxRequestsPerCrawl: 2000,
   // Add delay between requests to slow down the process
   minConcurrency: 1,
-  maxConcurrency: 10,
+  maxConcurrency: 1,
   navigationTimeoutSecs: 60,
   // Add delay between requests (in milliseconds)
-//   requestHandlerTimeoutSecs: 50,
+  requestHandlerTimeoutSecs: 100,
   browserPoolOptions: {
     // Disable the default fingerprint spoofing to avoid conflicts with Camoufox.
     useFingerprints: false,
@@ -30,12 +53,9 @@ const crawler = new PlaywrightCrawler({
   launchContext: {
     launcher: firefox,
     launchOptions: await launchOptions({
-      headless: true,
-    //   block_images: true,
-      // Pass your own Camoufox parameters here...
-      // block_images: true,
-      // fonts: ['Times New Roman'],
-      // ...
+      headless: false,
+      humanize: true,
+      geoip: true,
     }),
   },
 });
