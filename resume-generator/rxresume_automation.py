@@ -11,7 +11,16 @@ RXRESUME_EMAIL = os.getenv("RXRESUME_EMAIL", "")
 RXRESUME_PASSWORD = os.getenv("RXRESUME_PASSWORD", "")
 
 BASE_DIR = Path(__file__).parent
-RESUME_JSON_PATH = BASE_DIR / "base.json"
+
+# Allow override via environment variables (used by orchestrator)
+_custom_json_path = os.getenv("RESUME_JSON_PATH")
+RESUME_JSON_PATH = (
+    Path(_custom_json_path) if _custom_json_path else BASE_DIR / "base.json"
+)
+
+_custom_output_filename = os.getenv("OUTPUT_FILENAME")
+OUTPUT_FILENAME = _custom_output_filename if _custom_output_filename else "resume.pdf"
+
 OUTPUT_DIR = BASE_DIR / "resumes"
 
 
@@ -61,22 +70,28 @@ def export_pdf(page, output_path: Path) -> Path:
 
 
 def generate_resume_pdf(
-    output_filename: str = "resume.pdf",
-    import_json: bool = False,
+    output_filename: str = None,
+    import_json: bool = True,
     json_path: Path = None,
 ) -> Path:
     """
     Import resume and export PDF.
 
     Args:
-        output_filename: Name of the output PDF file
-        import_json: Whether to import a JSON file first
-        json_path: Path to JSON file (if import_json is True)
+        output_filename: Name of the output PDF file (defaults to OUTPUT_FILENAME env var)
+        import_json: Whether to import a JSON file first (default True)
+        json_path: Path to JSON file (defaults to RESUME_JSON_PATH env var)
 
     Returns:
         Path to the generated PDF
     """
-    output_path = OUTPUT_DIR / output_filename
+    # Use environment-provided defaults
+    actual_filename = output_filename or OUTPUT_FILENAME
+    actual_json_path = json_path or RESUME_JSON_PATH
+    output_path = OUTPUT_DIR / actual_filename
+
+    print(f"📄 Generating PDF: {actual_filename}")
+    print(f"   JSON source: {actual_json_path}")
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
@@ -87,19 +102,18 @@ def generate_resume_pdf(
             login(page)
 
             if import_json:
-                import_resume(page, json_path or RESUME_JSON_PATH)
+                import_resume(page, actual_json_path)
 
             navigate_to_top_resume(page)
             export_pdf(page, output_path)
         finally:
             browser.close()
 
+    print(f"✅ PDF saved: {output_path}")
     return output_path
 
 
 if __name__ == "__main__":
-    pdf_path = generate_resume_pdf(
-        output_filename="test_resume.pdf",
-        import_json=True,
-    )
-    print(f"PDF saved: {pdf_path}")
+    # When run directly, use environment variables or defaults
+    pdf_path = generate_resume_pdf()
+    print(f"Done! PDF saved: {pdf_path}")
