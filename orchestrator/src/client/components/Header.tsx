@@ -3,11 +3,12 @@
  */
 
 import React from 'react';
-import { RocketIcon, PlayIcon, RefreshIcon } from './Icons';
+import { RocketIcon, PlayIcon, RefreshIcon, TrashIcon } from './Icons';
 
 interface HeaderProps {
   onRunPipeline: () => void;
   onRefresh: () => void;
+  onClearDatabase: () => void;
   isPipelineRunning: boolean;
   isLoading: boolean;
 }
@@ -15,9 +16,16 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   onRunPipeline,
   onRefresh,
+  onClearDatabase,
   isPipelineRunning,
   isLoading,
 }) => {
+  const handleClearDatabase = () => {
+    if (window.confirm('Are you sure you want to clear all jobs from the database? This cannot be undone.')) {
+      onClearDatabase();
+    }
+  };
+
   return (
     <header className="header">
       <div className="container">
@@ -30,6 +38,16 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           
           <div className="flex gap-3">
+            <button
+              className="btn btn-ghost"
+              onClick={handleClearDatabase}
+              disabled={isLoading}
+              title="Clear all jobs from database"
+            >
+              <TrashIcon size={16} />
+              Clear DB
+            </button>
+            
             <button
               className="btn btn-ghost"
               onClick={onRefresh}

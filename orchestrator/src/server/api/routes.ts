@@ -8,6 +8,7 @@ import * as jobsRepo from '../repositories/jobs.js';
 import * as pipelineRepo from '../repositories/pipeline.js';
 import { runPipeline, processJob, getPipelineStatus } from '../pipeline/index.js';
 import { createNotionEntry } from '../services/notion.js';
+import { clearDatabase } from '../db/clear.js';
 import type { JobStatus, ApiResponse, JobsListResponse, PipelineStatusResponse } from '../../shared/types.js';
 
 export const apiRouter = Router();
@@ -263,6 +264,31 @@ apiRouter.post('/webhook/trigger', async (req: Request, res: Response) => {
       data: { 
         message: 'Pipeline triggered',
         triggeredAt: new Date().toISOString(),
+      } 
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ success: false, error: message });
+  }
+});
+
+// ============================================================================
+// Database Management
+// ============================================================================
+
+/**
+ * DELETE /api/database - Clear all data from the database
+ */
+apiRouter.delete('/database', async (req: Request, res: Response) => {
+  try {
+    const result = clearDatabase();
+    
+    res.json({ 
+      success: true, 
+      data: { 
+        message: 'Database cleared',
+        jobsDeleted: result.jobsDeleted,
+        runsDeleted: result.runsDeleted,
       } 
     });
   } catch (error) {

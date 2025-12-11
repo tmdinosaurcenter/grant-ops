@@ -89,3 +89,18 @@ export async function runPipeline(config?: {
     body: JSON.stringify(config || {}),
   });
 }
+
+// Database API
+export async function clearDatabase(): Promise<{
+  message: string;
+  jobsDeleted: number;
+  runsDeleted: number;
+}> {
+  return fetchApi<{
+    message: string;
+    jobsDeleted: number;
+    runsDeleted: number;
+  }>('/database', {
+    method: 'DELETE',
+  });
+}

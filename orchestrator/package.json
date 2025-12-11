@@ -13,6 +13,8 @@
     "build:client": "vite build",
     "start": "node dist/server/index.js",
     "db:migrate": "tsx src/server/db/migrate.ts",
+    "db:clear": "tsx src/server/db/clear.ts",
+    "db:drop": "tsx src/server/db/clear.ts --drop",
     "pipeline:run": "tsx src/server/pipeline/run.ts"
   },
   "dependencies": {

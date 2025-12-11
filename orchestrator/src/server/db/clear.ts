@@ -1,0 +1,56 @@
+/**
+ * Database utility scripts.
+ */
+
+import Database from 'better-sqlite3';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DB_PATH = join(__dirname, '../../../data/jobs.db');
+
+/**
+ * Clear all data from the database (keeps the schema intact).
+ */
+export function clearDatabase(): { jobsDeleted: number; runsDeleted: number } {
+  const sqlite = new Database(DB_PATH);
+  
+  try {
+    const jobsResult = sqlite.prepare('DELETE FROM jobs').run();
+    const runsResult = sqlite.prepare('DELETE FROM pipeline_runs').run();
+    
+    console.log(`🗑️ Cleared database: ${jobsResult.changes} jobs, ${runsResult.changes} pipeline runs`);
+    
+    return {
+      jobsDeleted: jobsResult.changes,
+      runsDeleted: runsResult.changes,
+    };
+  } finally {
+    sqlite.close();
+  }
+}
+
+/**
+ * Delete database file completely (will recreate on next run).
+ */
+export function dropDatabase(): void {
+  const { unlinkSync, existsSync } = require('fs');
+  
+  if (existsSync(DB_PATH)) {
+    unlinkSync(DB_PATH);
+    console.log('🗑️ Database file deleted');
+  } else {
+    console.log('ℹ️ No database file to delete');
+  }
+}
+
+// CLI execution
+if (process.argv[1]?.includes('clear.ts')) {
+  const arg = process.argv[2];
+  
+  if (arg === '--drop') {
+    dropDatabase();
+  } else {
+    clearDatabase();
+  }
+}
