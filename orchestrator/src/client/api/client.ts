@@ -104,3 +104,16 @@ export async function clearDatabase(): Promise<{
     method: 'DELETE',
   });
 }
+
+// Bulk operations
+export async function processAllDiscovered(): Promise<{
+  message: string;
+  count: number;
+}> {
+  return fetchApi<{
+    message: string;
+    count: number;
+  }>('/jobs/process-discovered', {
+    method: 'POST',
+  });
+}

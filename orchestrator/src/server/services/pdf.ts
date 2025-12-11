@@ -97,11 +97,10 @@ async function runPythonPdfGenerator(
   outputFilename: string
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Note: This calls the Python script with the JSON path
-    // The Python script needs to be modified to accept these args
-    // For now, we'll use environment variables
+    // Use the virtual environment's Python
+    const pythonPath = join(RESUME_GEN_DIR, '.venv', 'bin', 'python');
     
-    const child = spawn('python3', ['rxresume_automation.py'], {
+    const child = spawn(pythonPath, ['rxresume_automation.py'], {
       cwd: RESUME_GEN_DIR,
       env: {
         ...process.env,

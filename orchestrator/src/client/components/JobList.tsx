@@ -5,13 +5,16 @@
 import React, { useState } from 'react';
 import type { Job, JobStatus } from '../../shared/types';
 import { JobCard } from './JobCard';
+import { RefreshIcon } from './Icons';
 
 interface JobListProps {
   jobs: Job[];
   onApply: (id: string) => void;
   onReject: (id: string) => void;
   onProcess: (id: string) => void;
+  onProcessAll: () => void;
   processingJobId: string | null;
+  isProcessingAll: boolean;
 }
 
 type FilterTab = 'ready' | 'discovered' | 'applied' | 'all';
@@ -28,7 +31,9 @@ export const JobList: React.FC<JobListProps> = ({
   onApply,
   onReject,
   onProcess,
+  onProcessAll,
   processingJobId,
+  isProcessingAll,
 }) => {
   const [activeTab, setActiveTab] = useState<FilterTab>('ready');
   
@@ -40,24 +45,49 @@ export const JobList: React.FC<JobListProps> = ({
     return jobs.filter(job => tab.statuses.includes(job.status));
   }, [jobs, activeTab]);
   
+  const discoveredCount = jobs.filter(j => j.status === 'discovered').length;
+  
   return (
     <div>
-      <div className="tabs">
-        {tabs.map(tab => {
-          const count = tab.statuses.length === 0
-            ? jobs.length
-            : jobs.filter(j => tab.statuses.includes(j.status)).length;
-          
-          return (
-            <button
-              key={tab.id}
-              className={`tab ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label} ({count})
-            </button>
-          );
-        })}
+      <div className="tabs" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flex: 1 }}>
+          {tabs.map(tab => {
+            const count = tab.statuses.length === 0
+              ? jobs.length
+              : jobs.filter(j => tab.statuses.includes(j.status)).length;
+            
+            return (
+              <button
+                key={tab.id}
+                className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+        
+        {activeTab === 'discovered' && discoveredCount > 0 && (
+          <button
+            className="btn btn-primary"
+            onClick={onProcessAll}
+            disabled={isProcessingAll}
+            style={{ marginLeft: 'auto' }}
+          >
+            {isProcessingAll ? (
+              <>
+                <div className="spinner" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <RefreshIcon size={16} />
+                Process All ({discoveredCount})
+              </>
+            )}
+          </button>
+        )}
       </div>
       
       {filteredJobs.length === 0 ? (

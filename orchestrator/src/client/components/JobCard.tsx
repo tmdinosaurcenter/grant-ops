@@ -114,15 +114,28 @@ export const JobCard: React.FC<JobCardProps> = ({
           View Job
         </a>
         
+        {/* View PDF in browser */}
+        {hasPdf && (
+          <a
+            href={`/pdfs/resume_${job.id}.pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-ghost"
+          >
+            <ExternalLinkIcon size={16} />
+            View PDF
+          </a>
+        )}
+        
         {/* Download PDF */}
         {hasPdf && (
           <a
             href={`/pdfs/resume_${job.id}.pdf`}
-            download
+            download={`resume_${job.employer.replace(/[^a-z0-9]/gi, '_')}_${job.title.replace(/[^a-z0-9]/gi, '_')}.pdf`}
             className="btn btn-ghost"
           >
             <DownloadIcon size={16} />
-            Download PDF
+            Download
           </a>
         )}
         
