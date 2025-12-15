@@ -313,8 +313,8 @@ export const JobList: React.FC<JobListProps> = ({
       className="space-y-4"
     >
       <div className="space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList className="w-full sm:w-auto">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="w-full sm:w-auto h-9">
             {tabs.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id} className="flex-1 sm:flex-none">
                 {tab.label}
@@ -325,8 +325,8 @@ export const JobList: React.FC<JobListProps> = ({
             ))}
           </TabsList>
 
-          <div className="flex items-center justify-between gap-2 sm:justify-end">
-            <div className="flex items-center rounded-md border bg-muted/20 p-0.5">
+          <div className="flex items-center justify-between gap-1.5 sm:justify-end">
+            <div className="flex items-center rounded-md border bg-muted/20 p-0.5 h-9">
               <Button
                 type="button"
                 variant="ghost"
@@ -367,7 +367,7 @@ export const JobList: React.FC<JobListProps> = ({
           <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="h-9">
                   <ArrowUpDown className="h-4 w-4" />
                   <span className="hidden sm:inline">
                     Sort: {sortLabels[sort.key]} {sort.direction === "asc" ? "↑" : "↓"}
