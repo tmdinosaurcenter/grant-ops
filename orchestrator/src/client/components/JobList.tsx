@@ -3,10 +3,20 @@
  */
 
 import React, { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, Search, Table2 } from "lucide-react";
+import { ArrowUpDown, LayoutGrid, Search, Table2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -27,6 +37,16 @@ type ViewMode = "cards" | "table";
 
 const JOB_LIST_VIEW_STORAGE_KEY = "jobops.jobs.viewMode";
 const DEFAULT_SORT: JobSort = { key: "discoveredAt", direction: "desc" };
+
+const sortLabels: Record<JobSort["key"], string> = {
+  discoveredAt: "Discovered",
+  score: "Score",
+  title: "Title",
+  employer: "Company",
+  source: "Source",
+  location: "Location",
+  status: "Status",
+};
 
 const tabs: Array<{ id: FilterTab; label: string; statuses: JobStatus[] }> = [
   { id: "ready", label: "Ready", statuses: ["ready"] },
@@ -286,7 +306,52 @@ export const JobList: React.FC<JobListProps> = ({
             />
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <ArrowUpDown className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    Sort: {sortLabels[sort.key]} {sort.direction === "asc" ? "↑" : "↓"}
+                  </span>
+                  <span className="sm:hidden">Sort</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  value={sort.key}
+                  onValueChange={(value) =>
+                    setSort({
+                      key: value as JobSort["key"],
+                      direction:
+                        value === "score" || value === "discoveredAt"
+                          ? "desc"
+                          : "asc",
+                    })
+                  }
+                >
+                  {(Object.keys(sortLabels) as Array<JobSort["key"]>).map((key) => (
+                    <DropdownMenuRadioItem key={key} value={key}>
+                      {sortLabels[key]}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={() =>
+                    setSort((current) => ({
+                      ...current,
+                      direction: current.direction === "asc" ? "desc" : "asc",
+                    }))
+                  }
+                >
+                  Direction: {sort.direction === "asc" ? "Ascending" : "Descending"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <span className="text-sm tabular-nums text-muted-foreground">{activeResultsCount} jobs</span>
             {hasActiveFilters && (
               <Button
