@@ -10,10 +10,21 @@ export type JobStatus =
   | 'rejected'        // User rejected this job
   | 'expired';        // Deadline passed
 
+export type JobSource =
+  | 'gradcracker'
+  | 'indeed'
+  | 'linkedin';
+
 export interface Job {
   id: string;
   
-  // From crawler
+  // Source / provenance
+  source: JobSource;
+  sourceJobId: string | null;        // External ID (if provided)
+  jobUrlDirect: string | null;       // Source-provided direct URL (if provided)
+  datePosted: string | null;         // Source-provided posting date (if provided)
+
+  // From crawler (normalized)
   title: string;
   employer: string;
   employerUrl: string | null;
@@ -34,6 +45,32 @@ export interface Job {
   tailoredSummary: string | null;    // Generated resume summary
   pdfPath: string | null;            // Path to generated PDF
   notionPageId: string | null;       // Notion page ID if synced
+
+  // JobSpy fields (nullable for non-JobSpy sources)
+  jobType: string | null;
+  salarySource: string | null;
+  salaryInterval: string | null;
+  salaryMinAmount: number | null;
+  salaryMaxAmount: number | null;
+  salaryCurrency: string | null;
+  isRemote: boolean | null;
+  jobLevel: string | null;
+  jobFunction: string | null;
+  listingType: string | null;
+  emails: string | null;
+  companyIndustry: string | null;
+  companyLogo: string | null;
+  companyUrlDirect: string | null;
+  companyAddresses: string | null;
+  companyNumEmployees: string | null;
+  companyRevenue: string | null;
+  companyDescription: string | null;
+  skills: string | null;
+  experienceRange: string | null;
+  companyRating: number | null;
+  companyReviewsCount: number | null;
+  vacancyCount: number | null;
+  workFromHomeType: string | null;
   
   // Timestamps
   discoveredAt: string;
@@ -44,6 +81,7 @@ export interface Job {
 }
 
 export interface CreateJobInput {
+  source: JobSource;
   title: string;
   employer: string;
   employerUrl?: string;
@@ -56,6 +94,35 @@ export interface CreateJobInput {
   degreeRequired?: string;
   starting?: string;
   jobDescription?: string;
+
+  // JobSpy fields (optional)
+  sourceJobId?: string;
+  jobUrlDirect?: string;
+  datePosted?: string;
+  jobType?: string;
+  salarySource?: string;
+  salaryInterval?: string;
+  salaryMinAmount?: number;
+  salaryMaxAmount?: number;
+  salaryCurrency?: string;
+  isRemote?: boolean;
+  jobLevel?: string;
+  jobFunction?: string;
+  listingType?: string;
+  emails?: string;
+  companyIndustry?: string;
+  companyLogo?: string;
+  companyUrlDirect?: string;
+  companyAddresses?: string;
+  companyNumEmployees?: string;
+  companyRevenue?: string;
+  companyDescription?: string;
+  skills?: string;
+  experienceRange?: string;
+  companyRating?: number;
+  companyReviewsCount?: number;
+  vacancyCount?: number;
+  workFromHomeType?: string;
 }
 
 export interface UpdateJobInput {
@@ -71,7 +138,7 @@ export interface UpdateJobInput {
 export interface PipelineConfig {
   topN: number;                      // Number of top jobs to process
   minSuitabilityScore: number;       // Minimum score to auto-process
-  sources: string[];                 // Job sources to crawl
+  sources: JobSource[];              // Job sources to crawl
   profilePath: string;               // Path to profile JSON
   outputDir: string;                 // Directory for generated PDFs
 }

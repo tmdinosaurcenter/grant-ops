@@ -9,6 +9,10 @@ export const jobs = sqliteTable('jobs', {
   id: text('id').primaryKey(),
   
   // From crawler
+  source: text('source', { enum: ['gradcracker', 'indeed', 'linkedin'] }).notNull().default('gradcracker'),
+  sourceJobId: text('source_job_id'),
+  jobUrlDirect: text('job_url_direct'),
+  datePosted: text('date_posted'),
   title: text('title').notNull(),
   employer: text('employer').notNull(),
   employerUrl: text('employer_url'),
@@ -21,6 +25,32 @@ export const jobs = sqliteTable('jobs', {
   degreeRequired: text('degree_required'),
   starting: text('starting'),
   jobDescription: text('job_description'),
+
+  // JobSpy fields (nullable for other sources)
+  jobType: text('job_type'),
+  salarySource: text('salary_source'),
+  salaryInterval: text('salary_interval'),
+  salaryMinAmount: real('salary_min_amount'),
+  salaryMaxAmount: real('salary_max_amount'),
+  salaryCurrency: text('salary_currency'),
+  isRemote: integer('is_remote', { mode: 'boolean' }),
+  jobLevel: text('job_level'),
+  jobFunction: text('job_function'),
+  listingType: text('listing_type'),
+  emails: text('emails'),
+  companyIndustry: text('company_industry'),
+  companyLogo: text('company_logo'),
+  companyUrlDirect: text('company_url_direct'),
+  companyAddresses: text('company_addresses'),
+  companyNumEmployees: text('company_num_employees'),
+  companyRevenue: text('company_revenue'),
+  companyDescription: text('company_description'),
+  skills: text('skills'),
+  experienceRange: text('experience_range'),
+  companyRating: real('company_rating'),
+  companyReviewsCount: integer('company_reviews_count'),
+  vacancyCount: integer('vacancy_count'),
+  workFromHomeType: text('work_from_home_type'),
   
   // Orchestrator enrichments
   status: text('status', { 

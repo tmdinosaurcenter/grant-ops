@@ -4,8 +4,8 @@ Automated job discovery -> AI suitability scoring -> tailored resume PDFs -> a d
 
 ## How it works (pipeline)
 
-1. **Crawl**: `job-extractor` (Crawlee + Playwright + Camoufox) visits Gradcracker search pages, opens each job page, extracts structured fields + the job description, and captures the real application URL by clicking the apply button (skipped for already-known jobs).
-2. **Import + dedupe**: `orchestrator` reads the Crawlee dataset (`job-extractor/storage/datasets/default/*.json`) and inserts new jobs into SQLite (`jobs.job_url` is unique).
+1. **Crawl**: `extractors/gradcracker` (Crawlee + Playwright + Camoufox) visits Gradcracker search pages, opens each job page, extracts structured fields + the job description, and captures the real application URL by clicking the apply button (skipped for already-known jobs).
+2. **Import + dedupe**: `orchestrator` reads the Crawlee dataset (`extractors/gradcracker/storage/datasets/default/*.json`) and inserts new jobs into SQLite (`jobs.job_url` is unique).
 3. **Score**: `orchestrator` scores up to 50 unprocessed jobs via OpenRouter (cached as `suitabilityScore`/`suitabilityReason`).
 4. **Select**: take the top `N` jobs above `minSuitabilityScore`.
 5. **Process**: for each selected job:
@@ -30,7 +30,7 @@ flowchart LR
     PDFS[(PDFs<br/>pdfs/)]
   end
 
-  subgraph CRAWL["job-extractor (Crawlee/Playwright)"]
+  subgraph CRAWL["extractors/gradcracker (Crawlee/Playwright)"]
     C1["Seed search URLs<br/>(locations x roles)"]
     C2["Parse list pages<br/>enqueue job pages"]
     C3["Parse job pages<br/>extract JD + apply URL"]
@@ -73,7 +73,8 @@ job-ops/
     src/server/                 # API routes, pipeline, DB, services
     src/client/                 # UI (polls jobs, listens to SSE progress)
     src/shared/                 # shared types (Job, PipelineRun, etc.)
-  job-extractor/                # Crawlee crawler (Gradcracker)
+  extractors/gradcracker/       # Crawlee crawler (Gradcracker)
+  extractors/jobspy/            # JobSpy wrapper (Indeed/LinkedIn/etc)
   resume-generator/             # Python Playwright automation for rxresu.me
     base.json                   # your exported base resume (template)
   data/                         # persisted runtime artifacts (Docker default)
@@ -113,7 +114,7 @@ Install Node deps (both packages):
 
 ```bash
 cd orchestrator && npm install
-cd ../job-extractor && npm install
+cd ../extractors/gradcracker && npm install
 ```
 
 Configure the orchestrator env + DB:
@@ -153,7 +154,7 @@ Dev URLs:
 
 ## Notes / sharp edges
 
-- **Crawl targets**: edit `job-extractor/src/main.ts` to change the Gradcracker location/role matrix.
+- **Crawl targets**: edit `extractors/gradcracker/src/main.ts` to change the Gradcracker location/role matrix.
 - **Notion sync is schema-dependent**: `orchestrator/src/server/services/notion.ts` assumes property names; adjust to match your Notion database.
 - **Pipeline config knobs**: `POST /api/pipeline/run` accepts `{ topN, minSuitabilityScore }`; `PIPELINE_TOP_N`/`PIPELINE_MIN_SCORE` are used by `npm run pipeline:run` (CLI runner).
 - **Anti-bot reality**: crawling is headless + "humanized", but sites can still block; expect occasional flakiness.

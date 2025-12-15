@@ -14,13 +14,14 @@ import { readFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { runCrawler } from '../services/crawler.js';
+import { runJobSpy } from '../services/jobspy.js';
 import { scoreAndRankJobs, scoreJobSuitability } from '../services/scorer.js';
 import { generateSummary } from '../services/summary.js';
 import { generatePdf } from '../services/pdf.js';
 import * as jobsRepo from '../repositories/jobs.js';
 import * as pipelineRepo from '../repositories/pipeline.js';
-import { progressHelpers, resetProgress } from './progress.js';
-import type { Job, PipelineConfig } from '../../shared/types.js';
+import { progressHelpers, resetProgress, updateProgress } from './progress.js';
+import type { CreateJobInput, Job, JobSource, PipelineConfig } from '../../shared/types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PROFILE_PATH = join(__dirname, '../../../../resume-generator/base.json');
@@ -28,7 +29,7 @@ const DEFAULT_PROFILE_PATH = join(__dirname, '../../../../resume-generator/base.
 const DEFAULT_CONFIG: PipelineConfig = {
   topN: 10,
   minSuitabilityScore: 50,
-  sources: ['gradcracker'],
+  sources: ['gradcracker', 'indeed', 'linkedin'],
   profilePath: DEFAULT_PROFILE_PATH,
   outputDir: join(__dirname, '../../../data/pdfs'),
 };
@@ -73,31 +74,65 @@ export async function runPipeline(config: Partial<PipelineConfig> = {}): Promise
     console.log('\n🕷️ Running crawler...');
     progressHelpers.startCrawling();
     const existingJobUrls = await jobsRepo.getAllJobUrls();
-    const crawlerResult = await runCrawler({
-      existingJobUrls,
-      onProgress: (update) => {
-        progressHelpers.crawlingUpdate({
-          listPagesProcessed: update.listPagesProcessed,
-          listPagesTotal: update.listPagesTotal,
-          jobCardsFound: update.jobCardsFound,
-          jobPagesEnqueued: update.jobPagesEnqueued,
-          jobPagesSkipped: update.jobPagesSkipped,
-          jobPagesProcessed: update.jobPagesProcessed,
-          phase: update.phase,
-          currentUrl: update.currentUrl,
-        });
-      },
-    });
-    
-    if (!crawlerResult.success) {
-      throw new Error(`Crawler failed: ${crawlerResult.error}`);
+
+    const discoveredJobs: CreateJobInput[] = [];
+    const sourceErrors: string[] = [];
+
+    if (mergedConfig.sources.includes('gradcracker')) {
+      const crawlerResult = await runCrawler({
+        existingJobUrls,
+        onProgress: (update) => {
+          progressHelpers.crawlingUpdate({
+            listPagesProcessed: update.listPagesProcessed,
+            listPagesTotal: update.listPagesTotal,
+            jobCardsFound: update.jobCardsFound,
+            jobPagesEnqueued: update.jobPagesEnqueued,
+            jobPagesSkipped: update.jobPagesSkipped,
+            jobPagesProcessed: update.jobPagesProcessed,
+            phase: update.phase,
+            currentUrl: update.currentUrl,
+          });
+        },
+      });
+
+      if (!crawlerResult.success) {
+        sourceErrors.push(`gradcracker: ${crawlerResult.error ?? 'unknown error'}`);
+      } else {
+        discoveredJobs.push(...crawlerResult.jobs);
+      }
     }
-    
-    progressHelpers.crawlingComplete(crawlerResult.jobs.length);
+
+    const jobSpySites = mergedConfig.sources.filter(
+      (s): s is 'indeed' | 'linkedin' => s === 'indeed' || s === 'linkedin'
+    );
+
+    if (jobSpySites.length > 0) {
+      updateProgress({
+        step: 'crawling',
+        detail: `JobSpy: scraping ${jobSpySites.join(', ')}...`,
+      });
+
+      const jobSpyResult = await runJobSpy({ sites: jobSpySites });
+      if (!jobSpyResult.success) {
+        sourceErrors.push(`jobspy: ${jobSpyResult.error ?? 'unknown error'}`);
+      } else {
+        discoveredJobs.push(...jobSpyResult.jobs);
+      }
+    }
+
+    if (discoveredJobs.length === 0 && sourceErrors.length > 0) {
+      throw new Error(`All sources failed: ${sourceErrors.join('; ')}`);
+    }
+
+    if (sourceErrors.length > 0) {
+      console.warn(`ƒsÿ‹,? Some sources failed: ${sourceErrors.join('; ')}`);
+    }
+
+    progressHelpers.crawlingComplete(discoveredJobs.length);
     
     // Step 3: Import discovered jobs
     console.log('\n💾 Importing jobs to database...');
-    const { created, skipped } = await jobsRepo.bulkCreateJobs(crawlerResult.jobs);
+    const { created, skipped } = await jobsRepo.bulkCreateJobs(discoveredJobs);
     console.log(`   Created: ${created}, Skipped (duplicates): ${skipped}`);
     
     progressHelpers.importComplete(created, skipped);

@@ -1,5 +1,5 @@
 /**
- * Service for running the job crawler (job-extractor).
+ * Service for running the Gradcracker crawler (extractors/gradcracker).
  * Wraps the existing Crawlee-based crawler.
  */
 
@@ -11,7 +11,7 @@ import { createInterface } from 'readline';
 import type { CreateJobInput } from '../../shared/types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CRAWLER_DIR = join(__dirname, '../../../../job-extractor');
+const CRAWLER_DIR = join(__dirname, '../../../../extractors/gradcracker');
 const STORAGE_DIR = join(CRAWLER_DIR, 'storage/datasets/default');
 const JOBOPS_STORAGE_DIR = join(CRAWLER_DIR, 'storage/jobops');
 
@@ -29,7 +29,7 @@ export interface RunCrawlerOptions {
   existingJobUrls?: string[];
 
   /**
-   * Optional callback for live crawl progress emitted by job-extractor.
+   * Optional callback for live crawl progress emitted by the Gradcracker extractor.
    */
   onProgress?: (update: JobExtractorProgress) => void;
 }
@@ -57,7 +57,7 @@ async function writeExistingJobUrlsFile(existingJobUrls: string[] | undefined): 
 }
 
 /**
- * Run the job-extractor crawler and return discovered jobs.
+ * Run the Gradcracker crawler and return discovered jobs.
  */
 export async function runCrawler(options: RunCrawlerOptions = {}): Promise<CrawlerResult> {
   console.log('🕷️ Starting job crawler...');
@@ -144,6 +144,7 @@ async function readCrawledJobs(): Promise<CreateJobInput[]> {
       
       // Map crawler output to our job input format
       jobs.push({
+        source: 'gradcracker',
         title: data.title || 'Unknown Title',
         employer: data.employer || 'Unknown Employer',
         employerUrl: data.employerUrl,

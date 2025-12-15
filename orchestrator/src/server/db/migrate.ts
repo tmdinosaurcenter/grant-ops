@@ -25,6 +25,34 @@ const sqlite = new Database(DB_PATH);
 const migrations = [
   `CREATE TABLE IF NOT EXISTS jobs (
     id TEXT PRIMARY KEY,
+    source TEXT NOT NULL DEFAULT 'gradcracker',
+    source_job_id TEXT,
+    job_url_direct TEXT,
+    date_posted TEXT,
+    job_type TEXT,
+    salary_source TEXT,
+    salary_interval TEXT,
+    salary_min_amount REAL,
+    salary_max_amount REAL,
+    salary_currency TEXT,
+    is_remote INTEGER,
+    job_level TEXT,
+    job_function TEXT,
+    listing_type TEXT,
+    emails TEXT,
+    company_industry TEXT,
+    company_logo TEXT,
+    company_url_direct TEXT,
+    company_addresses TEXT,
+    company_num_employees TEXT,
+    company_revenue TEXT,
+    company_description TEXT,
+    skills TEXT,
+    experience_range TEXT,
+    company_rating REAL,
+    company_reviews_count INTEGER,
+    vacancy_count INTEGER,
+    work_from_home_type TEXT,
     title TEXT NOT NULL,
     employer TEXT NOT NULL,
     employer_url TEXT,
@@ -60,6 +88,39 @@ const migrations = [
     error_message TEXT
   )`,
 
+  // Add source column for existing databases (safe to skip if already present)
+  `ALTER TABLE jobs ADD COLUMN source TEXT NOT NULL DEFAULT 'gradcracker'`,
+  `UPDATE jobs SET source = 'gradcracker' WHERE source IS NULL OR source = ''`,
+
+  // Add JobSpy columns for existing databases (safe to skip if already present)
+  `ALTER TABLE jobs ADD COLUMN source_job_id TEXT`,
+  `ALTER TABLE jobs ADD COLUMN job_url_direct TEXT`,
+  `ALTER TABLE jobs ADD COLUMN date_posted TEXT`,
+  `ALTER TABLE jobs ADD COLUMN job_type TEXT`,
+  `ALTER TABLE jobs ADD COLUMN salary_source TEXT`,
+  `ALTER TABLE jobs ADD COLUMN salary_interval TEXT`,
+  `ALTER TABLE jobs ADD COLUMN salary_min_amount REAL`,
+  `ALTER TABLE jobs ADD COLUMN salary_max_amount REAL`,
+  `ALTER TABLE jobs ADD COLUMN salary_currency TEXT`,
+  `ALTER TABLE jobs ADD COLUMN is_remote INTEGER`,
+  `ALTER TABLE jobs ADD COLUMN job_level TEXT`,
+  `ALTER TABLE jobs ADD COLUMN job_function TEXT`,
+  `ALTER TABLE jobs ADD COLUMN listing_type TEXT`,
+  `ALTER TABLE jobs ADD COLUMN emails TEXT`,
+  `ALTER TABLE jobs ADD COLUMN company_industry TEXT`,
+  `ALTER TABLE jobs ADD COLUMN company_logo TEXT`,
+  `ALTER TABLE jobs ADD COLUMN company_url_direct TEXT`,
+  `ALTER TABLE jobs ADD COLUMN company_addresses TEXT`,
+  `ALTER TABLE jobs ADD COLUMN company_num_employees TEXT`,
+  `ALTER TABLE jobs ADD COLUMN company_revenue TEXT`,
+  `ALTER TABLE jobs ADD COLUMN company_description TEXT`,
+  `ALTER TABLE jobs ADD COLUMN skills TEXT`,
+  `ALTER TABLE jobs ADD COLUMN experience_range TEXT`,
+  `ALTER TABLE jobs ADD COLUMN company_rating REAL`,
+  `ALTER TABLE jobs ADD COLUMN company_reviews_count INTEGER`,
+  `ALTER TABLE jobs ADD COLUMN vacancy_count INTEGER`,
+  `ALTER TABLE jobs ADD COLUMN work_from_home_type TEXT`,
+
   `CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status)`,
   `CREATE INDEX IF NOT EXISTS idx_jobs_discovered_at ON jobs(discovered_at)`,
   `CREATE INDEX IF NOT EXISTS idx_pipeline_runs_started_at ON pipeline_runs(started_at)`,
@@ -72,6 +133,16 @@ for (const migration of migrations) {
     sqlite.exec(migration);
     console.log('✅ Migration applied');
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const isDuplicateColumn =
+      migration.toLowerCase().includes('alter table jobs add column') &&
+      message.toLowerCase().includes('duplicate column name');
+
+    if (isDuplicateColumn) {
+      console.log('↩️ Migration skipped (column already exists)');
+      continue;
+    }
+
     console.error('❌ Migration failed:', error);
     process.exit(1);
   }

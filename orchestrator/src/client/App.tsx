@@ -6,9 +6,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Toaster } from "@/components/ui/sonner";
-import type { Job, JobStatus } from "../shared/types";
+import type { Job, JobSource, JobStatus } from "../shared/types";
 import { Header, JobList, PipelineProgress, Stats } from "./components";
 import * as api from "./api";
+
+const DEFAULT_PIPELINE_SOURCES: JobSource[] = ["gradcracker", "indeed", "linkedin"];
+const PIPELINE_SOURCES_STORAGE_KEY = "jobops.pipeline.sources";
 
 export const App: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -24,6 +27,27 @@ export const App: React.FC = () => {
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
   const [processingJobId, setProcessingJobId] = useState<string | null>(null);
   const [isProcessingAll, setIsProcessingAll] = useState(false);
+  const [pipelineSources, setPipelineSources] = useState<JobSource[]>(() => {
+    try {
+      const raw = localStorage.getItem(PIPELINE_SOURCES_STORAGE_KEY);
+      if (!raw) return DEFAULT_PIPELINE_SOURCES;
+      const parsed = JSON.parse(raw) as unknown;
+      const allowed: JobSource[] = ["gradcracker", "indeed", "linkedin"];
+      if (!Array.isArray(parsed)) return DEFAULT_PIPELINE_SOURCES;
+      const next = parsed.filter((value): value is JobSource => allowed.includes(value));
+      return next.length > 0 ? next : DEFAULT_PIPELINE_SOURCES;
+    } catch {
+      return DEFAULT_PIPELINE_SOURCES;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PIPELINE_SOURCES_STORAGE_KEY, JSON.stringify(pipelineSources));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [pipelineSources]);
 
   const loadJobs = useCallback(async () => {
     try {
@@ -63,8 +87,10 @@ export const App: React.FC = () => {
   const handleRunPipeline = async () => {
     try {
       setIsPipelineRunning(true);
-      await api.runPipeline();
-      toast.message("Pipeline started", { description: "This may take a few minutes." });
+      await api.runPipeline({ sources: pipelineSources });
+      toast.message("Pipeline started", {
+        description: `Sources: ${pipelineSources.join(", ")}. This may take a few minutes.`,
+      });
 
       const pollInterval = setInterval(async () => {
         try {
@@ -170,6 +196,8 @@ export const App: React.FC = () => {
         onClearDatabase={handleClearDatabase}
         isPipelineRunning={isPipelineRunning}
         isLoading={isLoading}
+        pipelineSources={pipelineSources}
+        onPipelineSourcesChange={setPipelineSources}
       />
 
       <main className="container mx-auto max-w-7xl space-y-6 px-4 py-6 pb-12">
@@ -190,4 +218,3 @@ export const App: React.FC = () => {
     </>
   );
 };
-

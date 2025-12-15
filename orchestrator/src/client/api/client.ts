@@ -7,6 +7,7 @@ import type {
   ApiResponse, 
   JobsListResponse, 
   PipelineStatusResponse,
+  JobSource,
   PipelineRun 
 } from '../../shared/types';
 
@@ -83,6 +84,7 @@ export async function getPipelineRuns(): Promise<PipelineRun[]> {
 export async function runPipeline(config?: {
   topN?: number;
   minSuitabilityScore?: number;
+  sources?: JobSource[];
 }): Promise<{ message: string }> {
   return fetchApi<{ message: string }>('/pipeline/run', {
     method: 'POST',

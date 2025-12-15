@@ -280,6 +280,7 @@ apiRouter.get('/pipeline/runs', async (req: Request, res: Response) => {
 const runPipelineSchema = z.object({
   topN: z.number().min(1).max(50).optional(),
   minSuitabilityScore: z.number().min(0).max(100).optional(),
+  sources: z.array(z.enum(['gradcracker', 'indeed', 'linkedin'])).min(1).optional(),
 });
 
 apiRouter.post('/pipeline/run', async (req: Request, res: Response) => {
