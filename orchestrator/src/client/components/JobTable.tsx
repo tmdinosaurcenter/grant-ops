@@ -323,7 +323,7 @@ export const JobTable: React.FC<JobTableProps> = ({
                         <DropdownMenuItem asChild>
                           <a
                             href={pdfHref}
-                            download={`resume_${safeFilenamePart(job.employer)}_${safeFilenamePart(job.title)}.pdf`}
+                            download={`Shaheer_Sarfaraz_${safeFilenamePart(job.employer)}.pdf`}
                           >
                             <Download className="mr-2 h-4 w-4" />
                             Download PDF

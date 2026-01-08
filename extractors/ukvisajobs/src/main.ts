@@ -419,17 +419,18 @@ async function main(): Promise<void> {
             try {
                 response = await fetchPage(pageNo, authSession, { searchKeyword });
             } catch (error) {
-                if (error instanceof UkVisaJobsAuthError) {
-                    if (!credentials) {
+                if (!credentials) {
+                    if (error instanceof UkVisaJobsAuthError) {
                         throw new Error('UKVisaJobs auth expired. Set UKVISAJOBS_EMAIL and UKVISAJOBS_PASSWORD to refresh.');
                     }
-                    console.log('   Auth expired. Refreshing tokens...');
-                    authSession = await loginWithBrowser(credentials.email, credentials.password);
-                    await saveCachedAuthSession(authSession);
-                    response = await fetchPage(pageNo, authSession, { searchKeyword });
-                } else {
                     throw error;
                 }
+
+                const reason = error instanceof UkVisaJobsAuthError ? 'Auth expired.' : 'Fetch failed.';
+                console.log(`   ${reason} Refreshing tokens and retrying...`);
+                authSession = await loginWithBrowser(credentials.email, credentials.password);
+                await saveCachedAuthSession(authSession);
+                response = await fetchPage(pageNo, authSession, { searchKeyword });
             }
 
             if (response.status !== 1) {

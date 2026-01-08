@@ -176,6 +176,8 @@ const formatDateTime = (dateStr: string | null) => {
   }
 };
 
+const safeFilenamePart = (value: string) => value.replace(/[^a-z0-9]/gi, "_");
+
 const dateValue = (value: string | null) => {
   if (!value) return null;
   const parsed = Date.parse(value);
@@ -962,7 +964,10 @@ export const OrchestratorPage: React.FC = () => {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem asChild>
-                            <a href={selectedPdfHref} download={`resume_${selectedJob.id}.pdf`}>
+                            <a
+                              href={selectedPdfHref}
+                              download={`Shaheer_Sarfaraz_${safeFilenamePart(selectedJob.employer)}.pdf`}
+                            >
                               <FileText className="mr-2 h-4 w-4" />
                               Download PDF
                             </a>

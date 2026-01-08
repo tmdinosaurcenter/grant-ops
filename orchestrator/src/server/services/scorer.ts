@@ -56,8 +56,8 @@ export async function scoreJobSuitability(
     if (!content) {
       throw new Error('No content in response');
     }
-    
-    const parsed = JSON.parse(content);
+
+    const parsed = parseJsonFromContent(content);
     return {
       score: Math.min(100, Math.max(0, parsed.score || 0)),
       reason: parsed.reason || 'No explanation provided',
@@ -65,6 +65,24 @@ export async function scoreJobSuitability(
   } catch (error) {
     console.error('Failed to score job:', error);
     return mockScore(job);
+  }
+}
+
+function parseJsonFromContent(content: string): { score?: number; reason?: string } {
+  const trimmed = content.trim();
+  const withoutFences = trimmed.replace(/```(?:json)?\s*|```/gi, '').trim();
+  const candidate = withoutFences;
+
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    const firstBrace = candidate.indexOf('{');
+    const lastBrace = candidate.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      const sliced = candidate.slice(firstBrace, lastBrace + 1);
+      return JSON.parse(sliced);
+    }
+    throw new Error('Unable to parse JSON from model response');
   }
 }
 
@@ -93,7 +111,7 @@ Disciplines: ${job.disciplines || 'Not specified'}
 Job Description:
 ${job.jobDescription || 'No description available'}
 
-Respond with JSON: { "score": <0-100>, "reason": "<brief explanation>" }
+Respond with JSON only (no code fences): { "score": <0-100>, "reason": "<brief explanation>" }
 `;
 }
 
