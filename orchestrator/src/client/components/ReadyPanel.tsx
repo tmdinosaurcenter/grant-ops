@@ -220,41 +220,26 @@ export const ReadyPanel: React.FC<ReadyPanelProps> = ({
     <div className="flex flex-col h-full">
       {/* ─────────────────────────────────────────────────────────────────────
           PRIMARY ACTION CLUSTER
-          Three actions: Download PDF (primary), Open job (secondary), Mark applied (prominent)
+          All actions in one line: View, Save, Open, and Mark Applied
       ───────────────────────────────────────────────────────────────────── */}
-      <div className="space-y-3 pb-4 border-b border-border/40">
-        {/* Primary CTA: Mark Applied - most prominent, one-click */}
-        <Button
-          className="w-full h-11 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm"
-          onClick={handleMarkApplied}
-          disabled={isMarkingApplied}
-        >
-          {isMarkingApplied ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4" />
-          )}
-          Mark Applied
-        </Button>
-
-        {/* Secondary actions row */}
+      <div className="pb-4 border-b border-border/40">
         <div className="flex gap-1">
           {/* Show PDF - to verify quickly without download */}
           <Button asChild variant="outline" className="flex-1 h-9 gap-1 px-2 text-xs">
             <a href={pdfHref} target="_blank" rel="noopener noreferrer">
               <FileText className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">View</span>
+              <span className="truncate">View PDF</span>
             </a>
           </Button>
 
           {/* Download PDF - primary artifact action */}
-          <Button asChild variant="default" className="flex-1 h-9 gap-1 px-2 text-xs">
+          <Button asChild variant="outline" className="flex-1 h-9 gap-1 px-2 text-xs">
             <a
               href={pdfHref}
               download={`Shaheer_Sarfaraz_${safeFilenamePart(job.employer)}.pdf`}
             >
               <Download className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Save</span>
+              <span className="truncate">Download PDF</span>
             </a>
           </Button>
 
@@ -262,8 +247,23 @@ export const ReadyPanel: React.FC<ReadyPanelProps> = ({
           <Button asChild variant="outline" className="flex-1 h-9 gap-1 px-2 text-xs">
             <a href={jobLink} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Open</span>
+              <span className="truncate">Open Job Listing</span>
             </a>
+          </Button>
+
+          {/* Primary CTA: Mark Applied */}
+          <Button
+            onClick={handleMarkApplied}
+            variant="default"
+            className="flex-1 h-9 gap-1 px-2 text-xs"
+            disabled={isMarkingApplied}
+          >
+            {isMarkingApplied ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            )}
+            <span className="truncate">Mark Applied</span>
           </Button>
         </div>
       </div>
