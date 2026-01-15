@@ -842,7 +842,7 @@ export const OrchestratorPage: React.FC = () => {
           </Tabs>
 
           {/* List/Detail grid - directly under tabs, no extra section */}
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
             {/* Primary region: Job list with highest visual weight */}
             <div className="rounded-xl border border-border bg-card shadow-sm">
               {isLoading && jobs.length === 0 ? (
