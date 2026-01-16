@@ -121,8 +121,7 @@ export function createApp() {
       if (!cachedIndexHtml) {
         cachedIndexHtml = await readFile(indexPath, 'utf-8');
       }
-      const isAuthenticated = authGuard.basicAuthEnabled && authGuard.isAuthorized(req);
-      const html = isAuthenticated ? cachedIndexHtml : injectUmami(cachedIndexHtml);
+      const html = injectUmami(cachedIndexHtml);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.send(html);
     });
