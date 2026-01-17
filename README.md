@@ -13,7 +13,7 @@ AI-powered job discovery and application pipeline. Automatically finds jobs, sco
 https://github.com/user-attachments/assets/5b9157a9-13b0-4ec6-9bd2-a39dbc2b11c5
 
 ## Example of applying to a Ready job
-https://github.com/user-attachments/assets/07345b4f-71bf-4921-989d-fcf60aeb2518
+https://github.com/user-attachments/assets/06e5e782-47f5-42d0-8b28-b89102d7ea1b
 
 ## Quick Start
 ```bash
