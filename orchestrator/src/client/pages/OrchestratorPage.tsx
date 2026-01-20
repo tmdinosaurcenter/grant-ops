@@ -122,7 +122,9 @@ export const OrchestratorPage: React.FC = () => {
   };
 
   const { pipelineSources, setPipelineSources, toggleSource } = usePipelineSources();
-  const { jobs, stats, isLoading, isPipelineRunning, setIsPipelineRunning, loadJobs } = useOrchestratorData();
+  const { jobs, stats, settings, isLoading, isPipelineRunning, setIsPipelineRunning, loadJobs } = useOrchestratorData();
+
+  const showSponsorInfo = settings?.showSponsorInfo ?? true;
 
   const activeJobs = useFilteredJobs(jobs, activeTab, sourceFilter, searchQuery, sort);
   const counts = useMemo(() => getJobCounts(jobs), [jobs]);
@@ -276,6 +278,7 @@ export const OrchestratorPage: React.FC = () => {
                   onSelectJobId={handleSelectJobId}
                   onJobUpdated={loadJobs}
                   onSetActiveTab={setActiveTab}
+                  showSponsorInfo={showSponsorInfo}
                 />
               </div>
             )}

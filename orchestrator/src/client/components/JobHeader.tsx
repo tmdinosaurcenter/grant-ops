@@ -46,13 +46,13 @@ const ScoreMeter: React.FC<{ score: number | null }> = ({ score }) => {
   );
 };
 
-interface SponsorBadgeProps {
+interface SponsorPillProps {
   score: number | null;
   names: string | null;
   onCheck?: () => Promise<void>;
 }
 
-const SponsorBadge: React.FC<SponsorBadgeProps> = ({ score, names, onCheck }) => {
+const SponsorPill: React.FC<SponsorPillProps> = ({ score, names, onCheck }) => {
   const [isChecking, setIsChecking] = useState(false);
 
   const parsedNames = useMemo(() => {
@@ -78,12 +78,12 @@ const SponsorBadge: React.FC<SponsorBadgeProps> = ({ score, names, onCheck }) =>
   if (score == null && onCheck) {
     return (
       <TooltipProvider>
-        <Tooltip>
+        <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <Button
               size="sm"
               variant="ghost"
-              className="h-5 px-1.5 text-[9px] font-medium text-muted-foreground hover:text-foreground"
+              className="h-5 px-1.5 text-[9px] font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
               onClick={handleCheck}
               disabled={isChecking}
             >
@@ -92,7 +92,7 @@ const SponsorBadge: React.FC<SponsorBadgeProps> = ({ score, names, onCheck }) =>
               ) : (
                 <Search className="h-2.5 w-2.5" />
               )}
-              <span className="ml-0.5">{isChecking ? "Checking..." : "Check Visa"}</span>
+              <span>{isChecking ? "Checking..." : "Check Visa"}</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">
@@ -103,34 +103,30 @@ const SponsorBadge: React.FC<SponsorBadgeProps> = ({ score, names, onCheck }) =>
     );
   }
 
-  // If no score (and no callback), or error in score, show nothing
   if (score == null) {
     return null;
   }
 
-  const isFound = score >= 95;
-  const tooltipContent = isFound
-    ? `Confirmed Visa Sponsor (${score}% match: ${parsedNames.join(", ")})`
-    : `Sponsor Not Found (${score}% match${parsedNames.length > 0 ? `: ${parsedNames.join(", ")}` : ""})`;
+  const canSponsor = score >= 95;
+  const label = canSponsor ? "Can Sponsor" : "Unsure if Sponsor";
+  const dotClass = canSponsor ? "bg-emerald-500" : "bg-slate-500";
+  const tooltipContent = canSponsor
+    ? `${score}% match`
+    : `Closest: ${parsedNames.join(", ")} (${score}% match)`;
 
   return (
     <TooltipProvider>
-      <Tooltip>
+      <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-1 py-1 text-[9px] font-semibold uppercase tracking-wide cursor-help transition-colors",
-              isFound
-                ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
-                : "border-slate-500/40 bg-slate-500/15 text-slate-400"
-            )}
-          >
-            <Shield className={cn("h-3 w-3", isFound ? "fill-emerald-400/20" : "")} />
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/80 cursor-help">
+            <span className={cn("h-1.5 w-1.5 rounded-full opacity-80", dotClass)} />
+            {label}
           </span>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
-          <p className="text-xs font-medium">{isFound ? "Found" : "Not Found"}</p>
-          <p className="text-[10px] opacity-80 mt-1">{tooltipContent}</p>
+          {canSponsor && <p className="text-xs font-medium">{parsedNames.join(", ")}</p>}
+          {!canSponsor && <p className="text-xs font-medium">Unsure if sponsor</p>}
+          <p className="opacity-80 mt-1 text-xs">{tooltipContent}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -148,13 +144,6 @@ export const JobHeader: React.FC<JobHeaderProps> = ({ job, className, showSponso
           <div className="truncate text-base font-semibold text-foreground/90">{job.title}</div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{job.employer}</span>
-            {showSponsorInfo && (
-              <SponsorBadge
-                score={job.sponsorMatchScore}
-                names={job.sponsorMatchNames}
-                onCheck={onCheckSponsor}
-              />
-            )}
           </div>
         </div>
         <Badge variant="outline" className="text-[10px] uppercase tracking-wide text-muted-foreground border-border/50">
@@ -186,7 +175,16 @@ export const JobHeader: React.FC<JobHeaderProps> = ({ job, className, showSponso
 
       {/* Status and score: single line, subdued */}
       <div className="flex items-center justify-between gap-2 py-1 border-y border-border/30">
-        <StatusPill status={job.status} />
+        <div className="flex items-center gap-4">
+          <StatusPill status={job.status} />
+          {showSponsorInfo && (
+            <SponsorPill
+              score={job.sponsorMatchScore}
+              names={job.sponsorMatchNames}
+              onCheck={onCheckSponsor}
+            />
+          )}
+        </div>
         <ScoreMeter score={job.suitabilityScore} />
       </div>
     </div>
