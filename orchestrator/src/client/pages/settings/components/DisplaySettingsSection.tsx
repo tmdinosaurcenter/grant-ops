@@ -1,27 +1,25 @@
 import React from "react"
+import { useFormContext, Controller } from "react-hook-form"
 
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
+import { UpdateSettingsInput } from "@shared/settings-schema"
+import type { DisplayValues } from "@client/pages/settings/types"
 
 type DisplaySettingsSectionProps = {
-    showSponsorInfoDraft: boolean | null
-    setShowSponsorInfoDraft: (value: boolean | null) => void
-    defaultShowSponsorInfo: boolean
-    effectiveShowSponsorInfo: boolean
+    values: DisplayValues
     isLoading: boolean
     isSaving: boolean
 }
 
 export const DisplaySettingsSection: React.FC<DisplaySettingsSectionProps> = ({
-    showSponsorInfoDraft,
-    setShowSponsorInfoDraft,
-    defaultShowSponsorInfo,
-    effectiveShowSponsorInfo,
+    values,
     isLoading,
     isSaving,
 }) => {
-    const isChecked = showSponsorInfoDraft ?? defaultShowSponsorInfo
+    const { default: defaultShowSponsorInfo, effective: effectiveShowSponsorInfo } = values
+    const { control } = useFormContext<UpdateSettingsInput>()
 
     return (
         <AccordionItem value="display" className="border rounded-lg px-4">
@@ -31,13 +29,19 @@ export const DisplaySettingsSection: React.FC<DisplaySettingsSectionProps> = ({
             <AccordionContent className="pb-4">
                 <div className="space-y-4">
                     <div className="flex items-start space-x-3">
-                        <Checkbox
-                            id="showSponsorInfo"
-                            checked={isChecked}
-                            onCheckedChange={(checked) => {
-                                setShowSponsorInfoDraft(checked === "indeterminate" ? null : checked === true)
-                            }}
-                            disabled={isLoading || isSaving}
+                        <Controller
+                            name="showSponsorInfo"
+                            control={control}
+                            render={({ field }) => (
+                                <Checkbox
+                                    id="showSponsorInfo"
+                                    checked={field.value ?? defaultShowSponsorInfo}
+                                    onCheckedChange={(checked) => {
+                                        field.onChange(checked === "indeterminate" ? null : checked === true)
+                                    }}
+                                    disabled={isLoading || isSaving}
+                                />
+                            )}
                         />
                         <div className="flex flex-col gap-1.5">
                             <label

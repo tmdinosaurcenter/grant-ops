@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
-import { z } from 'zod';
-import * as settingsRepo from '../../repositories/settings.js';
+import { updateSettingsSchema } from '@shared/settings-schema.js';
+import * as settingsRepo from '@server/repositories/settings.js';
 import {
   extractProjectsFromProfile,
   normalizeResumeProjectsSettings,
   resolveResumeProjectsSettings,
-} from '../../services/resumeProjects.js';
-import { getProfile } from '../../services/profile.js';
+} from '@server/services/resumeProjects.js';
+import { getProfile } from '@server/services/profile.js';
 
 export const settingsRouter = Router();
 
@@ -152,30 +152,6 @@ settingsRouter.get('/', async (_req: Request, res: Response) => {
     const message = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({ success: false, error: message });
   }
-});
-
-const updateSettingsSchema = z.object({
-  model: z.string().trim().min(1).max(200).nullable().optional(),
-  modelScorer: z.string().trim().min(1).max(200).nullable().optional(),
-  modelTailoring: z.string().trim().min(1).max(200).nullable().optional(),
-  modelProjectSelection: z.string().trim().min(1).max(200).nullable().optional(),
-  pipelineWebhookUrl: z.string().trim().min(1).max(2000).nullable().optional(),
-  jobCompleteWebhookUrl: z.string().trim().min(1).max(2000).nullable().optional(),
-  resumeProjects: z.object({
-    maxProjects: z.number().int().min(0).max(50),
-    lockedProjectIds: z.array(z.string().trim().min(1)).max(200),
-    aiSelectableProjectIds: z.array(z.string().trim().min(1)).max(200),
-  }).nullable().optional(),
-  ukvisajobsMaxJobs: z.number().int().min(1).max(200).nullable().optional(),
-  gradcrackerMaxJobsPerTerm: z.number().int().min(1).max(200).nullable().optional(),
-  searchTerms: z.array(z.string().trim().min(1).max(200)).max(50).nullable().optional(),
-  jobspyLocation: z.string().trim().min(1).max(100).nullable().optional(),
-  jobspyResultsWanted: z.number().int().min(1).max(500).nullable().optional(),
-  jobspyHoursOld: z.number().int().min(1).max(168).nullable().optional(),
-  jobspyCountryIndeed: z.string().trim().min(1).max(100).nullable().optional(),
-  jobspySites: z.array(z.string().trim().min(1).max(50)).max(10).nullable().optional(),
-  jobspyLinkedinFetchDescription: z.boolean().nullable().optional(),
-  showSponsorInfo: z.boolean().nullable().optional(),
 });
 
 /**

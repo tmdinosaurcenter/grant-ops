@@ -141,6 +141,28 @@ describe("SettingsPage", () => {
     expect(toast.success).toHaveBeenCalledWith("Settings saved")
   })
 
+  it("shows validation error for too long model override", async () => {
+    vi.mocked(api.getSettings).mockResolvedValue(baseSettings)
+
+    renderPage()
+
+    const modelTrigger = await screen.findByRole("button", { name: /model/i })
+    fireEvent.click(modelTrigger)
+
+    const modelField = screen.getByText("Override model").parentElement ?? screen.getByRole("main")
+    const modelInput = within(modelField).getByRole("textbox")
+    
+    // Change to > 200 chars
+    fireEvent.change(modelInput, { target: { value: "a".repeat(201) } })
+
+    // Should see error message
+    expect(await screen.findByText(/String must contain at most 200 character\(s\)/i)).toBeInTheDocument()
+
+    // Save button should be disabled due to validation error (isValid will be false)
+    const saveButton = screen.getByRole("button", { name: /^save$/i })
+    expect(saveButton).toBeDisabled()
+  })
+
   it("clears jobs by status and summarizes results", async () => {
     vi.mocked(api.getSettings).mockResolvedValue(baseSettings)
     vi.mocked(api.deleteJobsByStatus).mockResolvedValue({ message: "", count: 2 })
