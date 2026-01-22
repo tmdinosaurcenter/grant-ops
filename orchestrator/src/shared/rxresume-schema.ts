@@ -1,7 +1,6 @@
 // combined types from: https://github.com/amruthpillai/reactive-resume/tree/v4.5.5/libs/schema/src
 
 import { z } from "zod";
-import { createId } from '@paralleldrive/cuid2';
 
 // --- Shared ---
 
