@@ -247,6 +247,7 @@ export async function updateSettings(update: {
   ukvisajobsEmail?: string | null
   ukvisajobsPassword?: string | null
   webhookSecret?: string | null
+  rxresumeBaseResumeId?: string | null
 }): Promise<AppSettings> {
   return fetchApi<AppSettings>('/settings', {
     method: 'PATCH',

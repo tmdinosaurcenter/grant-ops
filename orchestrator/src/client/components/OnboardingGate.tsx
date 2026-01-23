@@ -12,6 +12,7 @@ import * as api from "@client/api"
 import { useSettings } from "@client/hooks/useSettings"
 import { SettingsInput } from "@client/pages/settings/components/SettingsInput"
 import { formatSecretHint } from "@client/pages/settings/utils"
+import { BaseResumeSelection } from "@client/pages/settings/components/BaseResumeSelection"
 import type { ValidationResult } from "@shared/types"
 
 type ValidationState = ValidationResult & { checked: boolean }
@@ -21,6 +22,7 @@ export const OnboardingGate: React.FC = () => {
   const [isSavingEnv, setIsSavingEnv] = useState(false)
   const [isValidatingOpenrouter, setIsValidatingOpenrouter] = useState(false)
   const [isValidatingRxresume, setIsValidatingRxresume] = useState(false)
+  const [isValidatingBaseResume, setIsValidatingBaseResume] = useState(false)
   const [openrouterValidation, setOpenrouterValidation] = useState<ValidationState>({
     valid: false,
     message: null,
@@ -31,11 +33,17 @@ export const OnboardingGate: React.FC = () => {
     message: null,
     checked: false,
   })
+  const [baseResumeValidation, setBaseResumeValidation] = useState<ValidationState>({
+    valid: false,
+    message: null,
+    checked: false,
+  })
   const [currentStep, setCurrentStep] = useState<string | null>(null)
 
   const [openrouterApiKey, setOpenrouterApiKey] = useState("")
   const [rxresumeEmail, setRxresumeEmail] = useState("")
   const [rxresumePassword, setRxresumePassword] = useState("")
+  const [rxresumeBaseResumeId, setRxresumeBaseResumeId] = useState<string | null>(null)
 
   const validateOpenrouter = useCallback(async (apiKey?: string) => {
     setIsValidatingOpenrouter(true)
@@ -69,11 +77,27 @@ export const OnboardingGate: React.FC = () => {
     }
   }, [])
 
+  const validateBaseResume = useCallback(async () => {
+    setIsValidatingBaseResume(true)
+    try {
+      const result = await api.validateResumeConfig()
+      setBaseResumeValidation({ ...result, checked: true })
+      return result
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Base resume validation failed"
+      const result = { valid: false, message }
+      setBaseResumeValidation({ ...result, checked: true })
+      return result
+    } finally {
+      setIsValidatingBaseResume(false)
+    }
+  }, [])
+
   const hasOpenrouterKey = Boolean(settings?.openrouterApiKeyHint)
   const hasRxresumeEmail = Boolean(settings?.rxresumeEmail?.trim())
   const hasRxresumePassword = Boolean(settings?.rxresumePasswordHint)
   const shouldOpen = Boolean(settings && !settingsLoading)
-    && !(openrouterValidation.valid && rxresumeValidation.valid)
+    && !(openrouterValidation.valid && rxresumeValidation.valid && baseResumeValidation.valid)
 
   const openrouterCurrent = settings?.openrouterApiKeyHint
     ? formatSecretHint(settings.openrouterApiKeyHint)
@@ -85,6 +109,12 @@ export const OnboardingGate: React.FC = () => {
     ? formatSecretHint(settings.rxresumePasswordHint)
     : undefined
 
+  useEffect(() => {
+    if (settings) {
+      setRxresumeBaseResumeId(settings.rxresumeBaseResumeId || null)
+    }
+  }, [settings])
+
   const steps = useMemo(
     () => [
       {
@@ -92,15 +122,24 @@ export const OnboardingGate: React.FC = () => {
         label: "Connect AI",
         subtitle: "OpenRouter key",
         complete: openrouterValidation.valid,
+        disabled: false,
       },
       {
         id: "rxresume",
-        label: "PDF Export",
-        subtitle: "RxResume login",
+        label: "Connect Reactive Resume",
+        subtitle: "Reactive Resume login",
         complete: rxresumeValidation.valid,
+        disabled: false,
+      },
+      {
+        id: "baseresume",
+        label: "Select Template Resume",
+        subtitle: "Template selection",
+        complete: baseResumeValidation.valid,
+        disabled: !rxresumeValidation.valid,
       },
     ],
-    [openrouterValidation.valid, rxresumeValidation.valid]
+    [openrouterValidation.valid, rxresumeValidation.valid, baseResumeValidation.valid]
   )
 
   const defaultStep = steps.find((step) => !step.complete)?.id ?? steps[0]?.id
@@ -117,6 +156,7 @@ export const OnboardingGate: React.FC = () => {
     const results = await Promise.allSettled([
       validateOpenrouter(),
       validateRxresume(),
+      validateBaseResume(),
     ])
 
     const failed = results.find((result) => result.status === "rejected")
@@ -219,17 +259,46 @@ export const OnboardingGate: React.FC = () => {
     }
   }
 
+  const handleSaveBaseResume = async (): Promise<boolean> => {
+    if (!rxresumeBaseResumeId) {
+      toast.info("Select a base resume to continue")
+      return false
+    }
+
+    try {
+      setIsSavingEnv(true)
+      await api.updateSettings({ rxresumeBaseResumeId: rxresumeBaseResumeId })
+      const validation = await validateBaseResume()
+      if (!validation.valid) {
+        toast.error(validation.message || "Base resume validation failed")
+        return false
+      }
+
+      await refreshSettings()
+      toast.success("Base resume set")
+      return true
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to save base resume"
+      toast.error(message)
+      return false
+    } finally {
+      setIsSavingEnv(false)
+    }
+  }
+
   const resolvedStepIndex = currentStep ? steps.findIndex((step) => step.id === currentStep) : 0
   const stepIndex = resolvedStepIndex >= 0 ? resolvedStepIndex : 0
   const completedSteps = steps.filter((step) => step.complete).length
   const progressValue = steps.length > 0 ? Math.round((completedSteps / steps.length) * 100) : 0
-  const isBusy = isSavingEnv || settingsLoading || isValidatingOpenrouter || isValidatingRxresume
+  const isBusy = isSavingEnv || settingsLoading || isValidatingOpenrouter || isValidatingRxresume || isValidatingBaseResume
   const canGoBack = stepIndex > 0
   const primaryLabel = currentStep === "openrouter"
     ? (openrouterValidation.valid ? "Revalidate" : "Validate")
     : currentStep === "rxresume"
       ? (rxresumeValidation.valid ? "Revalidate" : "Validate")
-      : "Validate"
+      : currentStep === "baseresume"
+        ? (baseResumeValidation.valid ? "Revalidate" : "Validate")
+        : "Validate"
 
   const handlePrimaryAction = async () => {
     if (!currentStep) return
@@ -239,6 +308,10 @@ export const OnboardingGate: React.FC = () => {
     }
     if (currentStep === "rxresume") {
       await handleSaveRxresume()
+      return
+    }
+    if (currentStep === "baseresume") {
+      await handleSaveBaseResume()
       return
     }
   }
@@ -265,7 +338,7 @@ export const OnboardingGate: React.FC = () => {
           </AlertDialogHeader>
 
           <Tabs value={currentStep} onValueChange={setCurrentStep}>
-            <TabsList className="grid h-auto w-full grid-cols-1 gap-2 border-b border-border/60 bg-transparent p-0 text-left sm:grid-cols-2">
+            <TabsList className="grid h-auto w-full grid-cols-1 gap-2 border-b border-border/60 bg-transparent p-0 text-left sm:grid-cols-3">
               {steps.map((step, index) => {
                 const isActive = step.id === currentStep
                 const isComplete = step.complete
@@ -273,13 +346,17 @@ export const OnboardingGate: React.FC = () => {
                 return (
                   <FieldLabel
                     key={step.id}
-                    className="w-full [&>[data-slot=field]]:border-0 [&>[data-slot=field]]:p-0 [&>[data-slot=field]]:rounded-none"
+                    className={cn(
+                      "w-full [&>[data-slot=field]]:border-0 [&>[data-slot=field]]:p-0 [&>[data-slot=field]]:rounded-none",
+                      step.disabled && "opacity-50 cursor-not-allowed"
+                    )}
                   >
                     <TabsTrigger
                       value={step.id}
+                      disabled={step.disabled}
                       className={cn(
-                        "w-full rounded-none border-b-2 border-transparent px-3 py-4 text-left shadow-none",
-                        isActive ? "border-primary bg-muted/60 text-foreground" : "text-muted-foreground"
+                        "w-full rounded-md hover:bg-muted/60 border-b-2 border-transparent px-3 py-4 text-left shadow-none",
+                        isActive ? "border-primary !bg-muted/60 text-foreground" : "text-muted-foreground"
                       )}
                     >
                       <Field orientation="horizontal" className="items-start">
@@ -354,6 +431,21 @@ export const OnboardingGate: React.FC = () => {
                   disabled={isSavingEnv}
                 />
               </div>
+            </TabsContent>
+
+            <TabsContent value="baseresume" className="space-y-4 pt-6">
+              <div>
+                <p className="text-sm font-semibold">Select your template resume</p>
+                <p className="text-xs text-muted-foreground">Choose the resume you want to use as a template.
+                  The selected resume will be used as a template for tailoring.
+                </p>
+              </div>
+              <BaseResumeSelection
+                value={rxresumeBaseResumeId}
+                onValueChange={setRxresumeBaseResumeId}
+                hasRxResumeAccess={rxresumeValidation.valid}
+                disabled={isSavingEnv}
+              />
             </TabsContent>
 
           </Tabs>

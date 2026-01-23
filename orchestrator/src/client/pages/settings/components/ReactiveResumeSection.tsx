@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from "react"
 import { Controller, useFormContext } from "react-hook-form"
-import { AlertCircle, CheckCircle2, RefreshCw } from "lucide-react"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { clampInt } from "@/lib/utils"
 import type { ResumeProjectCatalogItem } from "@shared/types"
 import { UpdateSettingsInput } from "@shared/settings-schema"
-import * as api from "../../../api"
+import { BaseResumeSelection } from "./BaseResumeSelection"
 
 type ReactiveResumeSectionProps = {
     rxResumeBaseResumeIdDraft: string | null
@@ -40,30 +38,6 @@ export const ReactiveResumeSection: React.FC<ReactiveResumeSectionProps> = ({
     isSaving,
 }) => {
     const { control, formState: { errors } } = useFormContext<UpdateSettingsInput>()
-    const [resumes, setResumes] = useState<{ id: string; name: string }[]>([])
-    const [isFetchingResumes, setIsFetchingResumes] = useState(false)
-    const [fetchError, setFetchError] = useState<string | null>(null)
-
-    const fetchResumes = async () => {
-        if (!hasRxResumeAccess) return
-
-        setIsFetchingResumes(true)
-        setFetchError(null)
-        try {
-            const data = await api.getRxResumes()
-            setResumes(data)
-        } catch (error) {
-            setFetchError(error instanceof Error ? error.message : "Failed to fetch resumes")
-        } finally {
-            setIsFetchingResumes(false)
-        }
-    }
-
-    useEffect(() => {
-        if (hasRxResumeAccess) {
-            fetchResumes()
-        }
-    }, [hasRxResumeAccess])
 
     return (
         <AccordionItem value="reactive-resume" className="border rounded-lg px-4">
@@ -90,49 +64,12 @@ export const ReactiveResumeSection: React.FC<ReactiveResumeSectionProps> = ({
                                 </AlertDescription>
                             </Alert>
 
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm font-medium">Base Resume</div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={fetchResumes}
-                                        disabled={isFetchingResumes || isLoading || isSaving}
-                                        className="h-8 px-2"
-                                    >
-                                        <RefreshCw className={`h-3 w-3 mr-1 ${isFetchingResumes ? 'animate-spin' : ''}`} />
-                                        Refresh
-                                    </Button>
-                                </div>
-
-                                <Select
-                                    value={rxResumeBaseResumeIdDraft || "none"}
-                                    onValueChange={(value: string) => setRxResumeBaseResumeIdDraft(value === "none" ? null : value)}
-                                    disabled={isLoading || isSaving || isFetchingResumes}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a base resume..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">None (No profile data will be loaded)</SelectItem>
-                                        {resumes.map((resume) => (
-                                            <SelectItem key={resume.id} value={resume.id}>
-                                                {resume.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-
-                                {fetchError && (
-                                    <div className="text-xs text-destructive mt-1">
-                                        {fetchError}
-                                    </div>
-                                )}
-
-                                <div className="text-xs text-muted-foreground mt-2">
-                                    The selected resume will be used as a template for tailoring.
-                                </div>
-                            </div>
+                            <BaseResumeSelection
+                                value={rxResumeBaseResumeIdDraft}
+                                onValueChange={setRxResumeBaseResumeIdDraft}
+                                hasRxResumeAccess={hasRxResumeAccess}
+                                disabled={isLoading || isSaving}
+                            />
 
                             <Separator />
 
