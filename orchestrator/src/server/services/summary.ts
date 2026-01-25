@@ -2,8 +2,8 @@
  * Service for generating tailored resume content (Summary, Headline, Skills).
  */
 
-import { getSetting } from '../repositories/settings.js';
-import { callOpenRouter, type JsonSchemaDefinition } from './openrouter.js';
+import { getSetting } from "../repositories/settings.js";
+import { callOpenRouter, type JsonSchemaDefinition } from "./openrouter.js";
 
 export interface TailoredData {
   summary: string;
@@ -19,40 +19,40 @@ export interface TailoringResult {
 
 /** JSON schema for resume tailoring response */
 const TAILORING_SCHEMA: JsonSchemaDefinition = {
-  name: 'resume_tailoring',
+  name: "resume_tailoring",
   schema: {
-    type: 'object',
+    type: "object",
     properties: {
       headline: {
-        type: 'string',
-        description: 'Job title headline matching the JD exactly',
+        type: "string",
+        description: "Job title headline matching the JD exactly",
       },
       summary: {
-        type: 'string',
-        description: 'Tailored resume summary paragraph',
+        type: "string",
+        description: "Tailored resume summary paragraph",
       },
       skills: {
-        type: 'array',
-        description: 'Skills sections with keywords tailored to the job',
+        type: "array",
+        description: "Skills sections with keywords tailored to the job",
         items: {
-          type: 'object',
+          type: "object",
           properties: {
             name: {
-              type: 'string',
-              description: 'Skill category name (e.g., Frontend, Backend)',
+              type: "string",
+              description: "Skill category name (e.g., Frontend, Backend)",
             },
             keywords: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'List of skills/technologies in this category',
+              type: "array",
+              items: { type: "string" },
+              description: "List of skills/technologies in this category",
             },
           },
-          required: ['name', 'keywords'],
+          required: ["name", "keywords"],
           additionalProperties: false,
         },
       },
     },
-    required: ['headline', 'summary', 'skills'],
+    required: ["headline", "summary", "skills"],
     additionalProperties: false,
   },
 };
@@ -62,24 +62,28 @@ const TAILORING_SCHEMA: JsonSchemaDefinition = {
  */
 export async function generateTailoring(
   jobDescription: string,
-  profile: Record<string, unknown>
+  profile: Record<string, unknown>,
 ): Promise<TailoringResult> {
   if (!process.env.OPENROUTER_API_KEY) {
-    console.warn('⚠️ OPENROUTER_API_KEY not set, cannot generate tailoring');
-    return { success: false, error: 'API key not configured' };
+    console.warn("⚠️ OPENROUTER_API_KEY not set, cannot generate tailoring");
+    return { success: false, error: "API key not configured" };
   }
 
   const [overrideModel, overrideModelTailoring] = await Promise.all([
-    getSetting('model'),
-    getSetting('modelTailoring'),
+    getSetting("model"),
+    getSetting("modelTailoring"),
   ]);
   // Precedence: Tailoring-specific override > Global override > Env var > Default
-  const model = overrideModelTailoring || overrideModel || process.env.MODEL || 'google/gemini-3-flash-preview';
+  const model =
+    overrideModelTailoring ||
+    overrideModel ||
+    process.env.MODEL ||
+    "google/gemini-3-flash-preview";
   const prompt = buildTailoringPrompt(profile, jobDescription);
 
   const result = await callOpenRouter<TailoredData>({
     model,
-    messages: [{ role: 'user', content: prompt }],
+    messages: [{ role: "user", content: prompt }],
     jsonSchema: TAILORING_SCHEMA,
   });
 
@@ -91,16 +95,16 @@ export async function generateTailoring(
 
   // Basic validation
   if (!summary || !headline || !Array.isArray(skills)) {
-    console.warn('⚠️ AI response missing required fields:', result.data);
+    console.warn("⚠️ AI response missing required fields:", result.data);
   }
 
   return {
     success: true,
     data: {
-      summary: sanitizeText(summary || ''),
-      headline: sanitizeText(headline || ''),
-      skills: skills || []
-    }
+      summary: sanitizeText(summary || ""),
+      headline: sanitizeText(headline || ""),
+      skills: skills || [],
+    },
   };
 }
 
@@ -109,18 +113,21 @@ export async function generateTailoring(
  */
 export async function generateSummary(
   jobDescription: string,
-  profile: Record<string, unknown>
+  profile: Record<string, unknown>,
 ): Promise<{ success: boolean; summary?: string; error?: string }> {
   // If we just need summary, we can discard the rest (or cache it? but here we just return summary)
   const result = await generateTailoring(jobDescription, profile);
   return {
     success: result.success,
     summary: result.data?.summary,
-    error: result.error
+    error: result.error,
   };
 }
 
-function buildTailoringPrompt(profile: Record<string, unknown>, jd: string): string {
+function buildTailoringPrompt(
+  profile: Record<string, unknown>,
+  jd: string,
+): string {
   // Extract only needed parts of profile to save tokens
   const relevantProfile = {
     basics: {
@@ -132,13 +139,13 @@ function buildTailoringPrompt(profile: Record<string, unknown>, jd: string): str
     projects: (profile as any).sections?.projects?.items?.map((p: any) => ({
       name: p.name,
       description: p.description,
-      keywords: p.keywords
+      keywords: p.keywords,
     })),
     experience: (profile as any).sections?.experience?.items?.map((e: any) => ({
       company: e.company,
       position: e.position,
-      summary: e.summary
-    }))
+      summary: e.summary,
+    })),
   };
 
   return `
@@ -181,6 +188,6 @@ OUTPUT FORMAT (JSON):
 
 function sanitizeText(text: string): string {
   return text
-    .replace(/\*\*[\s\S]*?\*\*/g, '') // remove markdown bold
+    .replace(/\*\*[\s\S]*?\*\*/g, "") // remove markdown bold
     .trim();
 }

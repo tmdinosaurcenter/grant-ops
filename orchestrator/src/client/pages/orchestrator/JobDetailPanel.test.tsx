@@ -1,16 +1,21 @@
-import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-
-import { JobDetailPanel } from "./JobDetailPanel";
+import type React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Job } from "../../../shared/types";
 import * as api from "../../api";
+import { JobDetailPanel } from "./JobDetailPanel";
 
 vi.mock("@/components/ui/dropdown-menu", () => {
   return {
-    DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div role="menu">{children}</div>,
+    DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+      <div>{children}</div>
+    ),
+    DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+    DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
+      <div role="menu">{children}</div>
+    ),
     DropdownMenuItem: ({
       children,
       onSelect,
@@ -19,7 +24,12 @@ vi.mock("@/components/ui/dropdown-menu", () => {
       children: React.ReactNode;
       onSelect?: () => void;
     }) => (
-      <button type="button" role="menuitem" onClick={() => onSelect?.()} {...props}>
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => onSelect?.()}
+        {...props}
+      >
         {children}
       </button>
     ),
@@ -154,13 +164,11 @@ describe("JobDetailPanel", () => {
         onSelectJobId={vi.fn()}
         onJobUpdated={vi.fn().mockResolvedValue(undefined)}
         onSetActiveTab={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("discovered-panel")).toHaveTextContent("job-99");
   });
-
-
 
   it("shows an empty state when no job is selected", () => {
     render(
@@ -171,7 +179,7 @@ describe("JobDetailPanel", () => {
         onSelectJobId={vi.fn()}
         onJobUpdated={vi.fn().mockResolvedValue(undefined)}
         onSetActiveTab={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText("No job selected")).toBeInTheDocument();
@@ -182,11 +190,13 @@ describe("JobDetailPanel", () => {
       <JobDetailPanel
         activeTab="all"
         activeJobs={[]}
-        selectedJob={createJob({ jobDescription: "<p>Hello <strong>world</strong></p>" })}
+        selectedJob={createJob({
+          jobDescription: "<p>Hello <strong>world</strong></p>",
+        })}
         onSelectJobId={vi.fn()}
         onJobUpdated={vi.fn().mockResolvedValue(undefined)}
         onSetActiveTab={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText("Hello world")).toBeInTheDocument();
@@ -204,7 +214,7 @@ describe("JobDetailPanel", () => {
         onSelectJobId={vi.fn()}
         onJobUpdated={onJobUpdated}
         onSetActiveTab={vi.fn()}
-      />
+      />,
     );
 
     fireEvent.mouseDown(screen.getByRole("tab", { name: /description/i }));
@@ -217,7 +227,9 @@ describe("JobDetailPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() =>
-      expect(api.updateJob).toHaveBeenCalledWith("job-1", { jobDescription: "Updated description" })
+      expect(api.updateJob).toHaveBeenCalledWith("job-1", {
+        jobDescription: "Updated description",
+      }),
     );
     expect(onJobUpdated).toHaveBeenCalled();
   });
@@ -234,12 +246,14 @@ describe("JobDetailPanel", () => {
         onSelectJobId={vi.fn()}
         onJobUpdated={onJobUpdated}
         onSetActiveTab={vi.fn()}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /applied/i }));
 
-    await waitFor(() => expect(api.markAsApplied).toHaveBeenCalledWith("job-1"));
+    await waitFor(() =>
+      expect(api.markAsApplied).toHaveBeenCalledWith("job-1"),
+    );
     expect(onJobUpdated).toHaveBeenCalled();
   });
 
@@ -255,10 +269,12 @@ describe("JobDetailPanel", () => {
         onSelectJobId={vi.fn()}
         onJobUpdated={onJobUpdated}
         onSetActiveTab={vi.fn()}
-      />
+      />,
     );
 
-    fireEvent.pointerDown(screen.getByRole("button", { name: /more actions/i }));
+    fireEvent.pointerDown(
+      screen.getByRole("button", { name: /more actions/i }),
+    );
     const skipItem = await screen.findByRole("menuitem", { name: /skip job/i });
     fireEvent.click(skipItem);
 

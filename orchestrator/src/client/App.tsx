@@ -7,11 +7,11 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { CSSTransition, SwitchTransition } from "react-transition-group";
 
 import { Toaster } from "@/components/ui/sonner";
+import { OnboardingGate } from "./components/OnboardingGate";
 import { OrchestratorPage } from "./pages/OrchestratorPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { UkVisaJobsPage } from "./pages/UkVisaJobsPage";
 import { VisaSponsorsPage } from "./pages/VisaSponsorsPage";
-import { OnboardingGate } from "./components/OnboardingGate";
 
 export const App: React.FC = () => {
   const location = useLocation();

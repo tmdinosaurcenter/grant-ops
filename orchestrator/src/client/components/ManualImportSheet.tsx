@@ -2,8 +2,16 @@
  * Manual job import flow (paste JD -> infer -> review -> import).
  */
 
-import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ClipboardPaste, FileText, Link, Loader2, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ClipboardPaste,
+  FileText,
+  Link,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
+import type React from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -18,8 +26,8 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import * as api from "../api";
 import type { ManualJobDraft } from "../../shared/types";
+import * as api from "../api";
 
 type ManualImportStep = "paste" | "loading" | "review";
 
@@ -57,7 +65,10 @@ const emptyDraft: ManualJobDraftState = {
   starting: "",
 };
 
-const normalizeDraft = (draft?: ManualJobDraft | null, jd?: string): ManualJobDraftState => ({
+const normalizeDraft = (
+  draft?: ManualJobDraft | null,
+  jd?: string,
+): ManualJobDraftState => ({
   ...emptyDraft,
   title: draft?.title ?? "",
   employer: draft?.employer ?? "",
@@ -136,7 +147,8 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
   const stepLabel = ["Paste JD", "Infer details", "Review & import"][stepIndex];
 
   const canAnalyze = rawDescription.trim().length > 0 && step !== "loading";
-  const canFetch = fetchUrl.trim().length > 0 && !isFetching && step === "paste";
+  const canFetch =
+    fetchUrl.trim().length > 0 && !isFetching && step === "paste";
   const canImport = useMemo(() => {
     if (step !== "review") return false;
     return (
@@ -163,7 +175,9 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
 
       // Automatically proceed to analysis
       setStep("loading");
-      const inferResponse = await api.inferManualJob({ jobDescription: fetchedContent });
+      const inferResponse = await api.inferManualJob({
+        jobDescription: fetchedContent,
+      });
       // Don't pass raw HTML as job description - let user fill it in or use inferred data
       const normalized = normalizeDraft(inferResponse.job);
 
@@ -176,7 +190,8 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
       setWarning(inferResponse.warning ?? null);
       setStep("review");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch URL";
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch URL";
       setError(message);
       setIsFetching(false);
       setStep("paste");
@@ -193,7 +208,9 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
       setError(null);
       setWarning(null);
       setStep("loading");
-      const response = await api.inferManualJob({ jobDescription: rawDescription });
+      const response = await api.inferManualJob({
+        jobDescription: rawDescription,
+      });
       const normalized = normalizeDraft(response.job, rawDescription.trim());
       // Preserve the fetched URL if we fetched from a URL
       if (draft.jobUrl && !normalized.jobUrl) {
@@ -203,7 +220,10 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
       setWarning(response.warning ?? null);
       setStep("review");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to analyze job description";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to analyze job description";
       setError(message);
       setStep("paste");
     }
@@ -222,7 +242,8 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
       await onImported(created.id);
       onOpenChange(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to import job";
+      const message =
+        err instanceof Error ? err.message : "Failed to import job";
       toast.error(message);
     } finally {
       setIsImporting(false);
@@ -241,7 +262,8 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
               Manual Import
             </SheetTitle>
             <SheetDescription>
-              Paste a job description, review the AI draft, then import the role.
+              Paste a job description, review the AI draft, then import the
+              role.
             </SheetDescription>
           </SheetHeader>
 
@@ -306,7 +328,11 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
                       ) : (
                         <ClipboardPaste className="h-4 w-4" />
                       )}
-                      {isFetching ? "Fetching..." : fetchUrl.trim() ? "Fetch" : "Paste"}
+                      {isFetching
+                        ? "Fetching..."
+                        : fetchUrl.trim()
+                          ? "Fetch"
+                          : "Paste"}
                     </Button>
                   </div>
                 </div>
@@ -347,7 +373,9 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
             {step === "loading" && (
               <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                <div className="text-sm font-semibold">Analyzing job description</div>
+                <div className="text-sm font-semibold">
+                  Analyzing job description
+                </div>
                 <p className="text-xs text-muted-foreground max-w-xs">
                   Extracting title, company, location, and other details.
                 </p>
@@ -380,106 +408,197 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Title *</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Title *
+                    </label>
                     <Input
                       value={draft.title}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          title: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. Junior Backend Engineer"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Employer *</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Employer *
+                    </label>
                     <Input
                       value={draft.employer}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, employer: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          employer: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. Acme Labs"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Location</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Location
+                    </label>
                     <Input
                       value={draft.location}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, location: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          location: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. London, UK"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Salary</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Salary
+                    </label>
                     <Input
                       value={draft.salary}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, salary: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          salary: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. GBP 45k-55k"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Deadline</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Deadline
+                    </label>
                     <Input
                       value={draft.deadline}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, deadline: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          deadline: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. 30 Sep 2025"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Job type</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Job type
+                    </label>
                     <Input
                       value={draft.jobType}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, jobType: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          jobType: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. Full-time"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Job level</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Job level
+                    </label>
                     <Input
                       value={draft.jobLevel}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, jobLevel: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          jobLevel: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. Graduate"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Job function</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Job function
+                    </label>
                     <Input
                       value={draft.jobFunction}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, jobFunction: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          jobFunction: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. Software Engineering"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Disciplines</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Disciplines
+                    </label>
                     <Input
                       value={draft.disciplines}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, disciplines: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          disciplines: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. Computer Science"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Degree required</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Degree required
+                    </label>
                     <Input
                       value={draft.degreeRequired}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, degreeRequired: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          degreeRequired: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. BSc or MSc"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Starting</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Starting
+                    </label>
                     <Input
                       value={draft.starting}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, starting: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          starting: event.target.value,
+                        }))
+                      }
                       placeholder="e.g. Summer 2026"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Job URL</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Job URL
+                    </label>
                     <Input
                       value={draft.jobUrl}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, jobUrl: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          jobUrl: event.target.value,
+                        }))
+                      }
                       placeholder="https://..."
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Application link</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Application link
+                    </label>
                     <Input
                       value={draft.applicationLink}
-                      onChange={(event) => setDraft((prev) => ({ ...prev, applicationLink: event.target.value }))}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          applicationLink: event.target.value,
+                        }))
+                      }
                       placeholder="https://..."
                     />
                   </div>
@@ -491,7 +610,12 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
                   </label>
                   <Textarea
                     value={draft.jobDescription}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, jobDescription: event.target.value }))}
+                    onChange={(event) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        jobDescription: event.target.value,
+                      }))
+                    }
                     className="min-h-[200px] font-mono text-sm leading-relaxed"
                     placeholder="Paste the job description..."
                   />
@@ -502,7 +626,10 @@ export const ManualImportSheet: React.FC<ManualImportSheetProps> = ({
                   <Button
                     onClick={handleImport}
                     disabled={!canImport || isImporting}
-                    className={cn("w-full h-10 gap-2", !canImport && "opacity-70")}
+                    className={cn(
+                      "w-full h-10 gap-2",
+                      !canImport && "opacity-70",
+                    )}
                   >
                     {isImporting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

@@ -3,35 +3,35 @@
  */
 
 export type JobStatus =
-  | 'discovered'      // Crawled but not processed
-  | 'processing'      // Currently generating resume
-  | 'ready'           // PDF generated, waiting for user to apply
-  | 'applied'         // User marked as applied (added to Notion)
-  | 'skipped'         // User skipped this job
-  | 'expired';        // Deadline passed
+  | "discovered" // Crawled but not processed
+  | "processing" // Currently generating resume
+  | "ready" // PDF generated, waiting for user to apply
+  | "applied" // User marked as applied (added to Notion)
+  | "skipped" // User skipped this job
+  | "expired"; // Deadline passed
 
 export type JobSource =
-  | 'gradcracker'
-  | 'indeed'
-  | 'linkedin'
-  | 'ukvisajobs'
-  | 'manual';
+  | "gradcracker"
+  | "indeed"
+  | "linkedin"
+  | "ukvisajobs"
+  | "manual";
 
 export interface Job {
   id: string;
 
   // Source / provenance
   source: JobSource;
-  sourceJobId: string | null;        // External ID (if provided)
-  jobUrlDirect: string | null;       // Source-provided direct URL (if provided)
-  datePosted: string | null;         // Source-provided posting date (if provided)
+  sourceJobId: string | null; // External ID (if provided)
+  jobUrlDirect: string | null; // Source-provided direct URL (if provided)
+  datePosted: string | null; // Source-provided posting date (if provided)
 
   // From crawler (normalized)
   title: string;
   employer: string;
   employerUrl: string | null;
-  jobUrl: string;           // Gradcracker listing URL
-  applicationLink: string | null;  // Actual application URL
+  jobUrl: string; // Gradcracker listing URL
+  applicationLink: string | null; // Actual application URL
   disciplines: string | null;
   deadline: string | null;
   salary: string | null;
@@ -42,16 +42,16 @@ export interface Job {
 
   // Orchestrator enrichments
   status: JobStatus;
-  suitabilityScore: number | null;   // 0-100 AI-generated score
-  suitabilityReason: string | null;  // AI explanation
-  tailoredSummary: string | null;    // Generated resume summary
-  tailoredHeadline: string | null;   // Generated resume headline
-  tailoredSkills: string | null;     // Generated resume skills (JSON)
+  suitabilityScore: number | null; // 0-100 AI-generated score
+  suitabilityReason: string | null; // AI explanation
+  tailoredSummary: string | null; // Generated resume summary
+  tailoredHeadline: string | null; // Generated resume headline
+  tailoredSkills: string | null; // Generated resume skills (JSON)
   selectedProjectIds: string | null; // Comma-separated IDs of selected projects
-  pdfPath: string | null;            // Path to generated PDF
-  notionPageId: string | null;       // Notion page ID if synced
-  sponsorMatchScore: number | null;  // 0-100 fuzzy match score with visa sponsors
-  sponsorMatchNames: string | null;  // JSON array of matched sponsor names (when 100% matches or top match)
+  pdfPath: string | null; // Path to generated PDF
+  notionPageId: string | null; // Notion page ID if synced
+  sponsorMatchScore: number | null; // 0-100 fuzzy match score with visa sponsors
+  sponsorMatchNames: string | null; // JSON array of matched sponsor names (when 100% matches or top match)
 
   // JobSpy fields (nullable for non-JobSpy sources)
   jobType: string | null;
@@ -176,10 +176,10 @@ export interface UpdateJobInput {
 }
 
 export interface PipelineConfig {
-  topN: number;                      // Number of top jobs to process
-  minSuitabilityScore: number;       // Minimum score to auto-process
-  sources: JobSource[];              // Job sources to crawl
-  outputDir: string;                 // Directory for generated PDFs
+  topN: number; // Number of top jobs to process
+  minSuitabilityScore: number; // Minimum score to auto-process
+  sources: JobSource[]; // Job sources to crawl
+  outputDir: string; // Directory for generated PDFs
   enableCrawling?: boolean;
   enableScoring?: boolean;
   enableImporting?: boolean;
@@ -190,7 +190,7 @@ export interface PipelineRun {
   id: string;
   startedAt: string;
   completedAt: string | null;
-  status: 'running' | 'completed' | 'failed';
+  status: "running" | "completed" | "failed";
   jobsDiscovered: number;
   jobsProcessed: number;
   errorMessage: string | null;

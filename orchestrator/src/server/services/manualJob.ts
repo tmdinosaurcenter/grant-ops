@@ -2,9 +2,9 @@
  * Service for inferring job details from a pasted job description.
  */
 
-import { getSetting } from '../repositories/settings.js';
-import type { ManualJobDraft } from '../../shared/types.js';
-import { callOpenRouter, type JsonSchemaDefinition } from './openrouter.js';
+import type { ManualJobDraft } from "../../shared/types.js";
+import { getSetting } from "../repositories/settings.js";
+import { callOpenRouter, type JsonSchemaDefinition } from "./openrouter.js";
 
 export interface ManualJobInferenceResult {
   job: ManualJobDraft;
@@ -31,53 +31,90 @@ interface ManualJobApiResponse {
 
 /** JSON schema for manual job extraction response */
 const MANUAL_JOB_SCHEMA: JsonSchemaDefinition = {
-  name: 'manual_job_details',
+  name: "manual_job_details",
   schema: {
-    type: 'object',
+    type: "object",
     properties: {
-      title: { type: 'string', description: 'Job title' },
-      employer: { type: 'string', description: 'Company/employer name' },
-      location: { type: 'string', description: 'Job location' },
-      salary: { type: 'string', description: 'Salary information' },
-      deadline: { type: 'string', description: 'Application deadline' },
-      jobUrl: { type: 'string', description: 'URL of the job listing' },
-      applicationLink: { type: 'string', description: 'Direct application URL' },
-      jobType: { type: 'string', description: 'Employment type (full-time, part-time, etc.)' },
-      jobLevel: { type: 'string', description: 'Seniority level (entry, mid, senior, etc.)' },
-      jobFunction: { type: 'string', description: 'Job function/category' },
-      disciplines: { type: 'string', description: 'Required disciplines or fields' },
-      degreeRequired: { type: 'string', description: 'Required degree or education' },
-      starting: { type: 'string', description: 'Start date information' },
-      jobDescription: { type: 'string', description: 'Clean text job description with responsibilities and requirements' },
+      title: { type: "string", description: "Job title" },
+      employer: { type: "string", description: "Company/employer name" },
+      location: { type: "string", description: "Job location" },
+      salary: { type: "string", description: "Salary information" },
+      deadline: { type: "string", description: "Application deadline" },
+      jobUrl: { type: "string", description: "URL of the job listing" },
+      applicationLink: {
+        type: "string",
+        description: "Direct application URL",
+      },
+      jobType: {
+        type: "string",
+        description: "Employment type (full-time, part-time, etc.)",
+      },
+      jobLevel: {
+        type: "string",
+        description: "Seniority level (entry, mid, senior, etc.)",
+      },
+      jobFunction: { type: "string", description: "Job function/category" },
+      disciplines: {
+        type: "string",
+        description: "Required disciplines or fields",
+      },
+      degreeRequired: {
+        type: "string",
+        description: "Required degree or education",
+      },
+      starting: { type: "string", description: "Start date information" },
+      jobDescription: {
+        type: "string",
+        description:
+          "Clean text job description with responsibilities and requirements",
+      },
     },
-    required: ['title', 'employer', 'location', 'salary', 'deadline', 'jobUrl', 'applicationLink', 'jobType', 'jobLevel', 'jobFunction', 'disciplines', 'degreeRequired', 'starting', 'jobDescription'],
+    required: [
+      "title",
+      "employer",
+      "location",
+      "salary",
+      "deadline",
+      "jobUrl",
+      "applicationLink",
+      "jobType",
+      "jobLevel",
+      "jobFunction",
+      "disciplines",
+      "degreeRequired",
+      "starting",
+      "jobDescription",
+    ],
     additionalProperties: false,
   },
 };
 
-export async function inferManualJobDetails(jobDescription: string): Promise<ManualJobInferenceResult> {
+export async function inferManualJobDetails(
+  jobDescription: string,
+): Promise<ManualJobInferenceResult> {
   if (!process.env.OPENROUTER_API_KEY) {
     return {
       job: {},
-      warning: 'OPENROUTER_API_KEY not set. Fill details manually.',
+      warning: "OPENROUTER_API_KEY not set. Fill details manually.",
     };
   }
 
-  const overrideModel = await getSetting('model');
-  const model = overrideModel || process.env.MODEL || 'google/gemini-3-flash-preview';
+  const overrideModel = await getSetting("model");
+  const model =
+    overrideModel || process.env.MODEL || "google/gemini-3-flash-preview";
   const prompt = buildInferencePrompt(jobDescription);
 
   const result = await callOpenRouter<ManualJobApiResponse>({
     model,
-    messages: [{ role: 'user', content: prompt }],
+    messages: [{ role: "user", content: prompt }],
     jsonSchema: MANUAL_JOB_SCHEMA,
   });
 
   if (!result.success) {
-    console.warn('Manual job inference failed:', result.error);
+    console.warn("Manual job inference failed:", result.error);
     return {
       job: {},
-      warning: 'AI inference failed. Fill details manually.',
+      warning: "AI inference failed. Fill details manually.",
     };
   }
 
@@ -140,14 +177,17 @@ function normalizeDraft(parsed: ManualJobApiResponse): ManualJobDraft {
   if (parsed.salary?.trim()) out.salary = parsed.salary.trim();
   if (parsed.deadline?.trim()) out.deadline = parsed.deadline.trim();
   if (parsed.jobUrl?.trim()) out.jobUrl = parsed.jobUrl.trim();
-  if (parsed.applicationLink?.trim()) out.applicationLink = parsed.applicationLink.trim();
+  if (parsed.applicationLink?.trim())
+    out.applicationLink = parsed.applicationLink.trim();
   if (parsed.jobType?.trim()) out.jobType = parsed.jobType.trim();
   if (parsed.jobLevel?.trim()) out.jobLevel = parsed.jobLevel.trim();
   if (parsed.jobFunction?.trim()) out.jobFunction = parsed.jobFunction.trim();
   if (parsed.disciplines?.trim()) out.disciplines = parsed.disciplines.trim();
-  if (parsed.degreeRequired?.trim()) out.degreeRequired = parsed.degreeRequired.trim();
+  if (parsed.degreeRequired?.trim())
+    out.degreeRequired = parsed.degreeRequired.trim();
   if (parsed.starting?.trim()) out.starting = parsed.starting.trim();
-  if (parsed.jobDescription?.trim()) out.jobDescription = parsed.jobDescription.trim();
+  if (parsed.jobDescription?.trim())
+    out.jobDescription = parsed.jobDescription.trim();
 
   return out;
 }

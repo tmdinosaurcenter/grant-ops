@@ -1,12 +1,16 @@
-import { Router, Request, Response } from 'express';
-import { randomUUID } from 'crypto';
-import { z } from 'zod';
-import { JSDOM } from 'jsdom';
-import * as jobsRepo from '../../repositories/jobs.js';
-import { inferManualJobDetails } from '../../services/manualJob.js';
-import { scoreJobSuitability } from '../../services/scorer.js';
-import { getProfile } from '../../services/profile.js';
-import type { ApiResponse, ManualJobInferenceResponse, ManualJobFetchResponse } from '../../../shared/types.js';
+import { randomUUID } from "crypto";
+import { type Request, type Response, Router } from "express";
+import { JSDOM } from "jsdom";
+import { z } from "zod";
+import type {
+  ApiResponse,
+  ManualJobFetchResponse,
+  ManualJobInferenceResponse,
+} from "../../../shared/types.js";
+import * as jobsRepo from "../../repositories/jobs.js";
+import { inferManualJobDetails } from "../../services/manualJob.js";
+import { getProfile } from "../../services/profile.js";
+import { scoreJobSuitability } from "../../services/scorer.js";
 
 export const manualJobsRouter = Router();
 
@@ -46,7 +50,7 @@ const cleanOptional = (value?: string | null) => {
 /**
  * POST /api/manual-jobs/fetch - Fetch and extract job content from a URL
  */
-manualJobsRouter.post('/fetch', async (req: Request, res: Response) => {
+manualJobsRouter.post("/fetch", async (req: Request, res: Response) => {
   try {
     const input = manualJobFetchSchema.parse(req.body ?? {});
 
@@ -56,8 +60,10 @@ manualJobsRouter.post('/fetch', async (req: Request, res: Response) => {
     const response = await fetch(input.url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
     });
     clearTimeout(timeout);
@@ -74,21 +80,38 @@ manualJobsRouter.post('/fetch', async (req: Request, res: Response) => {
     const document = dom.window.document;
 
     // Extract page title (often contains job title)
-    const pageTitle = document.querySelector('title')?.textContent?.trim() || '';
+    const pageTitle =
+      document.querySelector("title")?.textContent?.trim() || "";
 
     // Extract meta description
-    const metaDescription = document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
+    const metaDescription =
+      document
+        .querySelector('meta[name="description"]')
+        ?.getAttribute("content")
+        ?.trim() || "";
 
     // Extract Open Graph data
-    const ogTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content')?.trim() || '';
-    const ogDescription = document.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim() || '';
-    const ogSiteName = document.querySelector('meta[property="og:site-name"]')?.getAttribute('content')?.trim() || '';
+    const ogTitle =
+      document
+        .querySelector('meta[property="og:title"]')
+        ?.getAttribute("content")
+        ?.trim() || "";
+    const ogDescription =
+      document
+        .querySelector('meta[property="og:description"]')
+        ?.getAttribute("content")
+        ?.trim() || "";
+    const ogSiteName =
+      document
+        .querySelector('meta[property="og:site-name"]')
+        ?.getAttribute("content")
+        ?.trim() || "";
 
     // Remove non-content elements
     const elementsToRemove = document.querySelectorAll(
-      'script, style, nav, header, footer, aside, iframe, noscript, ' +
-      '[role="navigation"], [role="banner"], [role="contentinfo"], ' +
-      '.nav, .navbar, .header, .footer, .sidebar, .menu, .cookie, .popup, .modal, .ad, .advertisement'
+      "script, style, nav, header, footer, aside, iframe, noscript, " +
+        '[role="navigation"], [role="banner"], [role="contentinfo"], ' +
+        ".nav, .navbar, .header, .footer, .sidebar, .menu, .cookie, .popup, .modal, .ad, .advertisement",
     );
     elementsToRemove.forEach((el) => el.remove());
 
@@ -96,29 +119,31 @@ manualJobsRouter.post('/fetch', async (req: Request, res: Response) => {
     const mainContent =
       document.querySelector(
         'main, [role="main"], article, ' +
-        '.job-description, .job-details, .job-content, .vacancy-description, ' +
-        '#job-description, #job-details, #job-content, ' +
-        '[class*="job-desc"], [class*="jobDesc"], [class*="vacancy"], [class*="posting"]'
+          ".job-description, .job-details, .job-content, .vacancy-description, " +
+          "#job-description, #job-details, #job-content, " +
+          '[class*="job-desc"], [class*="jobDesc"], [class*="vacancy"], [class*="posting"]',
       ) || document.body;
 
     // Get text content
-    let textContent = mainContent?.textContent || '';
+    let textContent = mainContent?.textContent || "";
 
     // Clean up whitespace
     textContent = textContent
-      .replace(/[\t ]+/g, ' ')
-      .replace(/\n\s*\n/g, '\n\n')
-      .replace(/\n{3,}/g, '\n\n')
+      .replace(/[\t ]+/g, " ")
+      .replace(/\n\s*\n/g, "\n\n")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
     // Build enriched content with extracted metadata
-    let enrichedContent = '';
+    let enrichedContent = "";
     if (pageTitle) enrichedContent += `Page Title: ${pageTitle}\n`;
-    if (ogTitle && ogTitle !== pageTitle) enrichedContent += `Job Title: ${ogTitle}\n`;
+    if (ogTitle && ogTitle !== pageTitle)
+      enrichedContent += `Job Title: ${ogTitle}\n`;
     if (ogSiteName) enrichedContent += `Company/Site: ${ogSiteName}\n`;
     if (ogDescription) enrichedContent += `Summary: ${ogDescription}\n`;
-    if (metaDescription && metaDescription !== ogDescription) enrichedContent += `Description: ${metaDescription}\n`;
-    if (enrichedContent) enrichedContent += '\n---\n\n';
+    if (metaDescription && metaDescription !== ogDescription)
+      enrichedContent += `Description: ${metaDescription}\n`;
+    if (enrichedContent) enrichedContent += "\n---\n\n";
     enrichedContent += textContent;
 
     // Limit to reasonable size
@@ -139,10 +164,12 @@ manualJobsRouter.post('/fetch', async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ success: false, error: error.message });
     }
-    if (error instanceof Error && error.name === 'AbortError') {
-      return res.status(408).json({ success: false, error: 'Request timed out' });
+    if (error instanceof Error && error.name === "AbortError") {
+      return res
+        .status(408)
+        .json({ success: false, error: "Request timed out" });
     }
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ success: false, error: message });
   }
 });
@@ -150,7 +177,7 @@ manualJobsRouter.post('/fetch', async (req: Request, res: Response) => {
 /**
  * POST /api/manual-jobs/infer - Infer job details from a pasted description
  */
-manualJobsRouter.post('/infer', async (req: Request, res: Response) => {
+manualJobsRouter.post("/infer", async (req: Request, res: Response) => {
   try {
     const input = manualJobInferenceSchema.parse(req.body ?? {});
     const result = await inferManualJobDetails(input.jobDescription);
@@ -168,7 +195,7 @@ manualJobsRouter.post('/infer', async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ success: false, error: error.message });
     }
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ success: false, error: message });
   }
 });
@@ -176,7 +203,7 @@ manualJobsRouter.post('/infer', async (req: Request, res: Response) => {
 /**
  * POST /api/manual-jobs/import - Import a manually curated job into the DB
  */
-manualJobsRouter.post('/import', async (req: Request, res: Response) => {
+manualJobsRouter.post("/import", async (req: Request, res: Response) => {
   try {
     const input = manualJobImportSchema.parse(req.body ?? {});
     const job = input.job;
@@ -187,7 +214,7 @@ manualJobsRouter.post('/import', async (req: Request, res: Response) => {
       `manual://${randomUUID()}`;
 
     const createdJob = await jobsRepo.createJob({
-      source: 'manual',
+      source: "manual",
       title: job.title.trim(),
       employer: job.employer.trim(),
       jobUrl,
@@ -208,20 +235,27 @@ manualJobsRouter.post('/import', async (req: Request, res: Response) => {
     (async () => {
       try {
         const rawProfile = await getProfile();
-        if (!rawProfile || typeof rawProfile !== 'object' || Array.isArray(rawProfile)) {
-          throw new Error('Invalid resume profile format');
+        if (
+          !rawProfile ||
+          typeof rawProfile !== "object" ||
+          Array.isArray(rawProfile)
+        ) {
+          throw new Error("Invalid resume profile format");
         }
         const profile = rawProfile as Record<string, unknown>;
-        const { score, reason } = await scoreJobSuitability(createdJob, profile);
+        const { score, reason } = await scoreJobSuitability(
+          createdJob,
+          profile,
+        );
         await jobsRepo.updateJob(createdJob.id, {
           suitabilityScore: score,
           suitabilityReason: reason,
         });
       } catch (error) {
-        console.warn('Manual job scoring failed:', error);
+        console.warn("Manual job scoring failed:", error);
       }
     })().catch((error) => {
-      console.warn('Manual job scoring task failed to start:', error);
+      console.warn("Manual job scoring task failed to start:", error);
     });
 
     res.json({ success: true, data: createdJob });
@@ -229,7 +263,7 @@ manualJobsRouter.post('/import', async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ success: false, error: error.message });
     }
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ success: false, error: message });
   }
 });

@@ -16,7 +16,10 @@ export function useRescoreJob(onJobUpdated: () => void | Promise<void>) {
         toast.success("Match recalculated");
         await onJobUpdated();
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to recalculate match";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to recalculate match";
         toast.error(message);
       } finally {
         setIsRescoring(false);

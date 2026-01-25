@@ -1,10 +1,10 @@
-import { config } from 'dotenv';
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { config } from "dotenv";
+import { existsSync } from "fs";
+import { join } from "path";
 
 const candidates = [
-  join(process.cwd(), '.env'),
-  join(process.cwd(), '..', '.env'),
+  join(process.cwd(), ".env"),
+  join(process.cwd(), "..", ".env"),
 ];
 
 for (const envPath of candidates) {

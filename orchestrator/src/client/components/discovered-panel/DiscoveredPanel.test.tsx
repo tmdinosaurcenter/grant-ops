@@ -1,17 +1,22 @@
-import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-
-import { DiscoveredPanel } from "./DiscoveredPanel";
+import type React from "react";
+import { toast } from "sonner";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Job } from "../../../shared/types";
 import * as api from "../../api";
-import { toast } from "sonner";
+import { DiscoveredPanel } from "./DiscoveredPanel";
 
 vi.mock("@/components/ui/dropdown-menu", () => {
   return {
-    DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div role="menu">{children}</div>,
+    DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+      <div>{children}</div>
+    ),
+    DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+    DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
+      <div role="menu">{children}</div>
+    ),
     DropdownMenuItem: ({
       children,
       onSelect,
@@ -20,7 +25,12 @@ vi.mock("@/components/ui/dropdown-menu", () => {
       children: React.ReactNode;
       onSelect?: () => void;
     }) => (
-      <button type="button" role="menuitem" onClick={() => onSelect?.()} {...props}>
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => onSelect?.()}
+        {...props}
+      >
         {children}
       </button>
     ),
@@ -123,10 +133,12 @@ describe("DiscoveredPanel", () => {
         job={job}
         onJobUpdated={onJobUpdated}
         onJobMoved={vi.fn()}
-      />
+      />,
     );
 
-    fireEvent.click(screen.getByRole("menuitem", { name: /recalculate match/i }));
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: /recalculate match/i }),
+    );
 
     await waitFor(() => expect(api.rescoreJob).toHaveBeenCalledWith("job-2"));
     expect(onJobUpdated).toHaveBeenCalled();

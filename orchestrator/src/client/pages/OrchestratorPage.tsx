@@ -2,18 +2,18 @@
  * Orchestrator layout with a split list/detail experience.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useSettings } from "@client/hooks/useSettings";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/drawer";
-
-import { ManualImportSheet } from "../components";
-import * as api from "../api";
 import type { JobSource } from "../../shared/types";
-import { DEFAULT_SORT } from "./orchestrator/constants";
+import * as api from "../api";
+import { ManualImportSheet } from "../components";
 import type { FilterTab, JobSort } from "./orchestrator/constants";
+import { DEFAULT_SORT } from "./orchestrator/constants";
 import { JobDetailPanel } from "./orchestrator/JobDetailPanel";
 import { JobListPanel } from "./orchestrator/JobListPanel";
 import { OrchestratorFilters } from "./orchestrator/OrchestratorFilters";
@@ -22,8 +22,11 @@ import { OrchestratorSummary } from "./orchestrator/OrchestratorSummary";
 import { useFilteredJobs } from "./orchestrator/useFilteredJobs";
 import { useOrchestratorData } from "./orchestrator/useOrchestratorData";
 import { usePipelineSources } from "./orchestrator/usePipelineSources";
-import { useSettings } from "@client/hooks/useSettings";
-import { getEnabledSources, getJobCounts, getSourcesWithJobs } from "./orchestrator/utils";
+import {
+  getEnabledSources,
+  getJobCounts,
+  getSourcesWithJobs,
+} from "./orchestrator/utils";
 
 export const OrchestratorPage: React.FC = () => {
   const { tab, jobId } = useParams<{ tab: string; jobId?: string }>();
@@ -43,7 +46,9 @@ export const OrchestratorPage: React.FC = () => {
     (newTab: string, newJobId?: string | null, isReplace = false) => {
       const search = searchParams.toString();
       const suffix = search ? `?${search}` : "";
-      const path = newJobId ? `/${newTab}/${newJobId}${suffix}` : `/${newTab}${suffix}`;
+      const path = newJobId
+        ? `/${newTab}/${newJobId}${suffix}`
+        : `/${newTab}${suffix}`;
       navigate(path, { replace: isReplace });
     },
     [navigate, searchParams],
@@ -65,7 +70,8 @@ export const OrchestratorPage: React.FC = () => {
   };
 
   // Sync sourceFilter with URL
-  const sourceFilter = (searchParams.get("source") as JobSource | "all") || "all";
+  const sourceFilter =
+    (searchParams.get("source") as JobSource | "all") || "all";
   const setSourceFilter = (source: JobSource | "all") => {
     setSearchParams(
       (prev) => {
@@ -88,7 +94,10 @@ export const OrchestratorPage: React.FC = () => {
   const setSort = (newSort: JobSort) => {
     setSearchParams(
       (prev) => {
-        if (newSort.key === DEFAULT_SORT.key && newSort.direction === DEFAULT_SORT.direction) {
+        if (
+          newSort.key === DEFAULT_SORT.key &&
+          newSort.direction === DEFAULT_SORT.direction
+        ) {
           prev.delete("sort");
         } else {
           prev.set("sort", `${newSort.key}-${newSort.direction}`);
@@ -107,12 +116,13 @@ export const OrchestratorPage: React.FC = () => {
     }
   }, [tab, navigateWithContext]);
 
-
   const [navOpen, setNavOpen] = useState(false);
   const [isManualImportOpen, setIsManualImportOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(
-    () => (typeof window !== "undefined" ? window.matchMedia("(min-width: 1024px)").matches : false),
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : false,
   );
 
   const setActiveTab = (newTab: FilterTab) => {
@@ -124,15 +134,35 @@ export const OrchestratorPage: React.FC = () => {
   };
 
   const { settings } = useSettings();
-  const { jobs, stats, isLoading, isPipelineRunning, setIsPipelineRunning, loadJobs } = useOrchestratorData();
-  const enabledSources = useMemo(() => getEnabledSources(settings ?? null), [settings]);
-  const { pipelineSources, setPipelineSources, toggleSource } = usePipelineSources(enabledSources);
+  const {
+    jobs,
+    stats,
+    isLoading,
+    isPipelineRunning,
+    setIsPipelineRunning,
+    loadJobs,
+  } = useOrchestratorData();
+  const enabledSources = useMemo(
+    () => getEnabledSources(settings ?? null),
+    [settings],
+  );
+  const { pipelineSources, setPipelineSources, toggleSource } =
+    usePipelineSources(enabledSources);
 
-  const activeJobs = useFilteredJobs(jobs, activeTab, sourceFilter, searchQuery, sort);
+  const activeJobs = useFilteredJobs(
+    jobs,
+    activeTab,
+    sourceFilter,
+    searchQuery,
+    sort,
+  );
   const counts = useMemo(() => getJobCounts(jobs), [jobs]);
   const sourcesWithJobs = useMemo(() => getSourcesWithJobs(jobs), [jobs]);
   const selectedJob = useMemo(
-    () => (selectedJobId ? jobs.find((job) => job.id === selectedJobId) ?? null : null),
+    () =>
+      selectedJobId
+        ? (jobs.find((job) => job.id === selectedJobId) ?? null)
+        : null,
     [jobs, selectedJobId],
   );
 
@@ -175,7 +205,8 @@ export const OrchestratorPage: React.FC = () => {
       }, 5000);
     } catch (error) {
       setIsPipelineRunning(false);
-      const message = error instanceof Error ? error.message : "Failed to start pipeline";
+      const message =
+        error instanceof Error ? error.message : "Failed to start pipeline";
       toast.error(message);
     }
   };
@@ -237,20 +268,23 @@ export const OrchestratorPage: React.FC = () => {
 
   return (
     <>
-        <OrchestratorHeader
-          navOpen={navOpen}
-          onNavOpenChange={setNavOpen}
-          isPipelineRunning={isPipelineRunning}
-          pipelineSources={pipelineSources}
-          enabledSources={enabledSources}
-          onToggleSource={toggleSource}
-          onSetPipelineSources={setPipelineSources}
-          onRunPipeline={handleRunPipeline}
-          onOpenManualImport={() => setIsManualImportOpen(true)}
-        />
+      <OrchestratorHeader
+        navOpen={navOpen}
+        onNavOpenChange={setNavOpen}
+        isPipelineRunning={isPipelineRunning}
+        pipelineSources={pipelineSources}
+        enabledSources={enabledSources}
+        onToggleSource={toggleSource}
+        onSetPipelineSources={setPipelineSources}
+        onRunPipeline={handleRunPipeline}
+        onOpenManualImport={() => setIsManualImportOpen(true)}
+      />
 
       <main className="container mx-auto max-w-7xl space-y-6 px-4 py-6 pb-12">
-        <OrchestratorSummary stats={stats} isPipelineRunning={isPipelineRunning} />
+        <OrchestratorSummary
+          stats={stats}
+          isPipelineRunning={isPipelineRunning}
+        />
 
         {/* Main content: tabs/filters -> list/detail */}
         <section className="space-y-4">
@@ -307,7 +341,9 @@ export const OrchestratorPage: React.FC = () => {
         <Drawer open={isDetailDrawerOpen} onOpenChange={onDrawerOpenChange}>
           <DrawerContent className="max-h-[90vh]">
             <div className="flex items-center justify-between px-4 pt-2">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Job details</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Job details
+              </div>
               <DrawerClose asChild>
                 <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
                   Close

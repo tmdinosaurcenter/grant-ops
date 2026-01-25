@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-import * as api from "../../api";
 import type { Job } from "../../../shared/types";
+import * as api from "../../api";
+import { useRescoreJob } from "../../hooks/useRescoreJob";
 import { DecideMode } from "./DecideMode";
 import { EmptyState } from "./EmptyState";
 import { ProcessingState } from "./ProcessingState";
 import { TailorMode } from "./TailorMode";
-import { useRescoreJob } from "../../hooks/useRescoreJob";
 
 type PanelMode = "decide" | "tailor";
 
@@ -82,7 +82,7 @@ export const DiscoveredPanel: React.FC<DiscoveredPanelProps> = ({
   }
 
   return (
-    <div className='h-full'>
+    <div className="h-full">
       {mode === "decide" ? (
         <DecideMode
           job={job}

@@ -1,9 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import { useRescoreJob } from "./useRescoreJob";
-import * as api from "../api";
 import { toast } from "sonner";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as api from "../api";
+import { useRescoreJob } from "./useRescoreJob";
 
 vi.mock("../api", () => ({
   rescoreJob: vi.fn(),
