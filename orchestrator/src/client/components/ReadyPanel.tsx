@@ -67,6 +67,7 @@ export const ReadyPanel: React.FC<ReadyPanelProps> = ({
   const [mode, setMode] = useState<PanelMode>("ready");
   const [isMarkingApplied, setIsMarkingApplied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isRescoring, setIsRescoring] = useState(false);
   const [catalog, setCatalog] = useState<ResumeProjectCatalogItem[]>([]);
   const [recentlyApplied, setRecentlyApplied] = useState<{
     jobId: string;
@@ -178,6 +179,22 @@ export const ReadyPanel: React.FC<ReadyPanelProps> = ({
       toast.error(message);
     } finally {
       setIsRegenerating(false);
+    }
+  }, [job, onJobUpdated]);
+
+  const handleRescore = useCallback(async () => {
+    if (!job) return;
+
+    try {
+      setIsRescoring(true);
+      await api.rescoreJob(job.id);
+      toast.success("Fit assessment updated");
+      await onJobUpdated();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to re-run fit assessment";
+      toast.error(message);
+    } finally {
+      setIsRescoring(false);
     }
   }, [job, onJobUpdated]);
 
@@ -383,6 +400,14 @@ export const ReadyPanel: React.FC<ReadyPanelProps> = ({
             >
               <RefreshCcw className={cn("mr-2 h-4 w-4", isRegenerating && "animate-spin")} />
               {isRegenerating ? "Regenerating..." : "Regenerate PDF"}
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onSelect={handleRescore}
+              disabled={isRescoring}
+            >
+              <RefreshCcw className={cn("mr-2 h-4 w-4", isRescoring && "animate-spin")} />
+              {isRescoring ? "Re-scoring..." : "Re-run fit assessment"}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />

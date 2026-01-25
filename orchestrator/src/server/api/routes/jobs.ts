@@ -4,6 +4,8 @@ import * as jobsRepo from '../../repositories/jobs.js';
 import * as settingsRepo from '../../repositories/settings.js';
 import { processJob, summarizeJob, generateFinalPdf } from '../../pipeline/index.js';
 import { createNotionEntry } from '../../services/notion.js';
+import { scoreJobSuitability } from '../../services/scorer.js';
+import { getProfile } from '../../services/profile.js';
 import * as visaSponsors from '../../services/visa-sponsors/index.js';
 import type { Job, JobStatus, ApiResponse, JobsListResponse } from '../../../shared/types.js';
 
@@ -133,6 +135,40 @@ jobsRouter.post('/:id/summarize', async (req: Request, res: Response) => {
 
     const job = await jobsRepo.getJobById(req.params.id);
     res.json({ success: true, data: job });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ success: false, error: message });
+  }
+});
+
+/**
+ * POST /api/jobs/:id/rescore - Regenerate suitability score + reason
+ */
+jobsRouter.post('/:id/rescore', async (req: Request, res: Response) => {
+  try {
+    const job = await jobsRepo.getJobById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({ success: false, error: 'Job not found' });
+    }
+
+    const rawProfile = await getProfile();
+    if (!rawProfile || typeof rawProfile !== 'object' || Array.isArray(rawProfile)) {
+      return res.status(400).json({ success: false, error: 'Invalid resume profile format' });
+    }
+
+    const { score, reason } = await scoreJobSuitability(job, rawProfile as Record<string, unknown>);
+
+    const updatedJob = await jobsRepo.updateJob(job.id, {
+      suitabilityScore: score,
+      suitabilityReason: reason,
+    });
+
+    if (!updatedJob) {
+      return res.status(404).json({ success: false, error: 'Job not found' });
+    }
+
+    res.json({ success: true, data: updatedJob });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({ success: false, error: message });

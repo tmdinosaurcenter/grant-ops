@@ -24,11 +24,13 @@ export const DiscoveredPanel: React.FC<DiscoveredPanelProps> = ({
   const [mode, setMode] = useState<PanelMode>("decide");
   const [isSkipping, setIsSkipping] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isRescoring, setIsRescoring] = useState(false);
 
   useEffect(() => {
     setMode("decide");
     setIsSkipping(false);
     setIsFinalizing(false);
+    setIsRescoring(false);
   }, [job?.id]);
 
   const handleSkip = async () => {
@@ -69,6 +71,22 @@ export const DiscoveredPanel: React.FC<DiscoveredPanelProps> = ({
     }
   };
 
+  const handleRescore = async () => {
+    if (!job) return;
+    try {
+      setIsRescoring(true);
+      await api.rescoreJob(job.id);
+      toast.success("Fit assessment updated");
+      await onJobUpdated();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to re-run fit assessment";
+      toast.error(message);
+    } finally {
+      setIsRescoring(false);
+    }
+  };
+
   if (!job) {
     return <EmptyState />;
   }
@@ -85,6 +103,8 @@ export const DiscoveredPanel: React.FC<DiscoveredPanelProps> = ({
           onTailor={() => setMode("tailor")}
           onSkip={handleSkip}
           isSkipping={isSkipping}
+          onRescore={handleRescore}
+          isRescoring={isRescoring}
           onCheckSponsor={async () => {
             await api.checkSponsor(job.id);
             await onJobUpdated();

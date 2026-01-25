@@ -96,6 +96,32 @@ describe.sequential('Jobs API routes', () => {
     );
   });
 
+  it('rescoring a job updates the suitability fields', async () => {
+    const { createJob } = await import('../../repositories/jobs.js');
+    const { scoreJobSuitability } = await import('../../services/scorer.js');
+    const { getProfile } = await import('../../services/profile.js');
+
+    vi.mocked(getProfile).mockResolvedValue({});
+    vi.mocked(scoreJobSuitability).mockResolvedValue({ score: 77, reason: 'Updated fit' });
+
+    const job = await createJob({
+      source: 'manual',
+      title: 'Test Role',
+      employer: 'Acme',
+      jobUrl: 'https://example.com/job/5',
+      jobDescription: 'Test description',
+      suitabilityScore: 55,
+      suitabilityReason: 'Old fit',
+    });
+
+    const res = await fetch(`${baseUrl}/api/jobs/${job.id}/rescore`, { method: 'POST' });
+    const body = await res.json();
+
+    expect(body.success).toBe(true);
+    expect(body.data.suitabilityScore).toBe(77);
+    expect(body.data.suitabilityReason).toBe('Updated fit');
+  });
+
   it('checks visa sponsor status for a job', async () => {
     const { searchSponsors } = await import('../../services/visa-sponsors/index.js');
     vi.mocked(searchSponsors).mockReturnValue([

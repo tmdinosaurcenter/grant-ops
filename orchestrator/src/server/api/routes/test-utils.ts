@@ -45,6 +45,10 @@ vi.mock('../../services/scorer.js', () => ({
   scoreJobSuitability: vi.fn(),
 }));
 
+vi.mock('../../services/profile.js', () => ({
+  getProfile: vi.fn().mockResolvedValue({}),
+}));
+
 vi.mock('../../services/ukvisajobs.js', () => ({
   fetchUkVisaJobsPage: vi.fn(),
 }));

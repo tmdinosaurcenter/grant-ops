@@ -1,7 +1,13 @@
 import React, { useMemo, useState } from "react";
-import { ExternalLink, Loader2, Sparkles, XCircle } from "lucide-react";
+import { ChevronUp, ExternalLink, Loader2, RefreshCcw, Sparkles, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 
 import { FitAssessment, JobHeader, TailoredSummary } from "..";
@@ -14,6 +20,8 @@ interface DecideModeProps {
   onTailor: () => void;
   onSkip: () => void;
   isSkipping: boolean;
+  onRescore: () => void;
+  isRescoring: boolean;
   onCheckSponsor?: () => Promise<void>;
 }
 
@@ -22,6 +30,8 @@ export const DecideMode: React.FC<DecideModeProps> = ({
   onTailor,
   onSkip,
   isSkipping,
+  onRescore,
+  isRescoring,
   onCheckSponsor,
 }) => {
   const [showDescription, setShowDescription] = useState(false);
@@ -87,7 +97,26 @@ export const DecideMode: React.FC<DecideModeProps> = ({
 
       <Separator className='opacity-40' />
 
-      <div className='pt-6 pb-2'>
+      <div className='pt-4 pb-2 space-y-4'>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-8 gap-2 text-xs text-muted-foreground hover:text-foreground justify-center"
+            >
+              More actions
+              <ChevronUp className="h-3 w-3 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-56">
+            <DropdownMenuItem onSelect={onRescore} disabled={isRescoring}>
+              <RefreshCcw className={isRescoring ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} />
+              {isRescoring ? "Re-scoring..." : "Re-run fit assessment"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {jobLink ? (
           <div className='flex justify-center'>
             <a
@@ -105,4 +134,3 @@ export const DecideMode: React.FC<DecideModeProps> = ({
     </div>
   );
 };
-

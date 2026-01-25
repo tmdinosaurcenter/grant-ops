@@ -85,6 +85,12 @@ export async function processJob(id: string, options?: { force?: boolean }): Pro
   });
 }
 
+export async function rescoreJob(id: string): Promise<Job> {
+  return fetchApi<Job>(`/jobs/${id}/rescore`, {
+    method: 'POST',
+  });
+}
+
 export async function summarizeJob(id: string, options?: { force?: boolean }): Promise<Job> {
   const query = options?.force ? '?force=1' : '';
   return fetchApi<Job>(`/jobs/${id}/summarize${query}`, {
