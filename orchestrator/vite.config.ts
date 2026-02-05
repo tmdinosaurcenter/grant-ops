@@ -1,9 +1,26 @@
 /// <reference types="vitest" />
 
+import { execSync } from "node:child_process";
 import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+
+let gitVersion: string;
+try {
+  gitVersion = execSync("git describe --tags --always", {
+    stdio: ["ignore", "pipe", "ignore"],
+  })
+    .toString()
+    .trim();
+} catch {
+  gitVersion = process.env.APP_VERSION ?? "unknown";
+}
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __APP_VERSION__: string;
+}
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -43,5 +60,8 @@ export default defineConfig({
   build: {
     outDir: "dist/client",
     emptyOutDir: true,
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(gitVersion),
   },
 });
