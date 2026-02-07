@@ -18,7 +18,11 @@ https://github.com/user-attachments/assets/5b9157a9-13b0-4ec6-9bd2-a39dbc2b11c5
 
 https://github.com/user-attachments/assets/06e5e782-47f5-42d0-8b28-b89102d7ea1b
 
-# How to Start
+## How to Start
+
+### Prerequisites
+
+- Docker Desktop (or Docker Engine + Docker Compose)
 
 ### Overview
 
@@ -44,13 +48,12 @@ cd job-ops
 # 2. Start with Docker (pulls pre-built image from GHCR)
 docker compose up -d
 
-# 3. Open the dashboard, the app will onboard your credentials
-open http://localhost:3005
+# 3. Open the dashboard in your browser, the app will onboard your credentials
+# http://localhost:3005
 ```
 
 ### Required accounts
 
-- Create required accounts (so onboarding is smooth)
 - OpenRouter (LLM provider)
   - Create an account and generate an API key.
 
