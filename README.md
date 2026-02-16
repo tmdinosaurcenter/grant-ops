@@ -34,16 +34,16 @@ JobOps ships with full docs for setup, architecture, extractors, and troubleshoo
 
 If you want the serious view of the project, start here:
 
-- [Documentation Home](https://jobops.dakheera47/docs/)
-- [Self-Hosting Guide](https://jobops.dakheera47/docs/getting-started/self-hosting)
-- [Feature Overview](https://jobops.dakheera47/docs/features/overview)
-- [Orchestrator Pipeline](https://jobops.dakheera47/docs/features/orchestrator)
-- [Extractor System](https://jobops.dakheera47/docs/extractors/overview)
-- [Troubleshooting](https://jobops.dakheera47/docs/troubleshooting/common-problems)
+- [Documentation Home](https://jobops.dakheera47.com/docs/)
+- [Self-Hosting Guide](https://jobops.dakheera47.com/docs/getting-started/self-hosting)
+- [Feature Overview](https://jobops.dakheera47.com/docs/features/overview)
+- [Orchestrator Pipeline](https://jobops.dakheera47.com/docs/features/orchestrator)
+- [Extractor System](https://jobops.dakheera47.com/docs/extractors/overview)
+- [Troubleshooting](https://jobops.dakheera47.com/docs/troubleshooting/common-problems)
 
 ## 🚀 Quick Start (10 Min)
 
-Prefer guided setup? Follow the [Self-Hosting Guide](https://jobops.dakheera47/docs/getting-started/self-hosting).
+Prefer guided setup? Follow the [Self-Hosting Guide](https://jobops.dakheera47.com/docs/getting-started/self-hosting).
 
 ```bash
 # 1. Download
@@ -84,7 +84,7 @@ docker compose up -d
 | **Gradcracker** | STEM / Grads (UK) |
 | **UK Visa Jobs** | Sponsorship (UK) |
 
-*(More extractors can be added via TypeScript - see [extractors documentation](https://jobops.dakheera47/docs/extractors/overview))*
+*(More extractors can be added via TypeScript - see [extractors documentation](https://jobops.dakheera47.com/docs/extractors/overview))*
 
 ## Post-App Tracking (Killer Feature)
 
@@ -93,7 +93,7 @@ Connect Gmail → AI routes emails to your applied jobs.
 * "We'd like to interview you..." → **Status: Interviewing** (Auto-updated)
 * "Unfortunately..." → **Status: Rejected** (Auto-updated)
 
-See [post-application tracking docs](https://jobops.dakheera47/docs/features/post-application-tracking) for setup.
+See [post-application tracking docs](https://jobops.dakheera47.com/docs/features/post-application-tracking) for setup.
 
 **Note on Analytics**: The alpha version includes anonymous analytics (Umami) to help debug performance. To opt-out, block `umami.dakheera47.com` in your firewall/DNS.
 
