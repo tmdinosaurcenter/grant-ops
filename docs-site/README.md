@@ -22,6 +22,20 @@ Build output:
 
 - `docs-site/build`
 
+## Configuration
+
+Set these environment variables for deploys:
+
+- `DOCS_SITE_URL`: Public origin for canonical/sitemap URLs.
+  Example: `https://jobops.dakheera47.com`
+- `DOCS_BASE_URL`: Route prefix where docs are hosted.
+  Example: `/docs/`
+
+Defaults (local development):
+
+- `DOCS_SITE_URL=http://localhost:3006`
+- `DOCS_BASE_URL=/docs/`
+
 ## Versioning
 
 Cut a docs version tied to a release tag:

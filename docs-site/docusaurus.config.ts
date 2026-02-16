@@ -2,6 +2,15 @@ import type * as Preset from "@docusaurus/preset-classic";
 import type { Config } from "@docusaurus/types";
 import { themes as prismThemes } from "prism-react-renderer";
 
+const siteUrl = process.env.DOCS_SITE_URL ?? "http://localhost:3006";
+const configuredBaseUrl = process.env.DOCS_BASE_URL ?? "/docs/";
+const normalizedBaseUrl = configuredBaseUrl.startsWith("/")
+  ? configuredBaseUrl
+  : `/${configuredBaseUrl}`;
+const siteBaseUrl = normalizedBaseUrl.endsWith("/")
+  ? normalizedBaseUrl
+  : `${normalizedBaseUrl}/`;
+
 const config: Config = {
   title: "JobOps Documentation",
   tagline: "Self-hosted job search automation docs",
@@ -9,8 +18,8 @@ const config: Config = {
   future: {
     v4: true,
   },
-  url: "http://localhost:3005",
-  baseUrl: "/docs/",
+  url: siteUrl,
+  baseUrl: siteBaseUrl,
   onBrokenLinks: "throw",
   markdown: {
     hooks: {
