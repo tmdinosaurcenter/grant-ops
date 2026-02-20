@@ -1,3 +1,4 @@
+import { useMarkAsAppliedMutation } from "@client/hooks/queries/useJobMutations";
 import { useHotkeys } from "@client/hooks/useHotkeys";
 import { useProfile } from "@client/hooks/useProfile";
 import { useSettings } from "@client/hooks/useSettings";
@@ -146,6 +147,7 @@ export const OrchestratorPage: React.FC = () => {
   );
 
   const { settings, refreshSettings } = useSettings();
+  const markAsAppliedMutation = useMarkAsAppliedMutation();
   const {
     jobs,
     selectedJob,
@@ -438,8 +440,8 @@ export const OrchestratorPage: React.FC = () => {
         if (shortcutActionInFlight.current) return;
         shortcutActionInFlight.current = true;
         const jobId = selectedJob.id;
-        api
-          .markAsApplied(jobId)
+        markAsAppliedMutation
+          .mutateAsync(jobId)
           .then(async () => {
             toast.success("Marked as applied", {
               description: `${selectedJob.title} at ${selectedJob.employer}`,

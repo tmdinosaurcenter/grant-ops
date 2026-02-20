@@ -46,6 +46,7 @@ import {
   safeFilenamePart,
 } from "@/lib/utils";
 import * as api from "../api";
+import { useMarkAsAppliedMutation } from "../hooks/queries/useJobMutations";
 import { useProfile } from "../hooks/useProfile";
 import { useRescoreJob } from "../hooks/useRescoreJob";
 import { FitAssessment, JobHeader, TailoredSummary } from ".";
@@ -82,6 +83,7 @@ export const ReadyPanel: React.FC<ReadyPanelProps> = ({
     timeoutId: ReturnType<typeof setTimeout>;
   } | null>(null);
   const previousJobIdRef = useRef<string | null>(null);
+  const markAsAppliedMutation = useMarkAsAppliedMutation();
 
   const { personName } = useProfile();
 
@@ -148,7 +150,7 @@ export const ReadyPanel: React.FC<ReadyPanelProps> = ({
 
     try {
       setIsMarkingApplied(true);
-      await api.markAsApplied(job.id);
+      await markAsAppliedMutation.mutateAsync(job.id);
 
       // Store for undo
       const timeoutId = setTimeout(() => {
@@ -181,7 +183,7 @@ export const ReadyPanel: React.FC<ReadyPanelProps> = ({
     } finally {
       setIsMarkingApplied(false);
     }
-  }, [job, onJobMoved, onJobUpdated, handleUndoApplied]);
+  }, [job, markAsAppliedMutation, onJobMoved, onJobUpdated, handleUndoApplied]);
 
   const handleRegenerate = useCallback(async () => {
     if (!job) return;

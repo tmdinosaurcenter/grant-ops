@@ -42,6 +42,7 @@ import {
 import { JobDetailsEditDrawer } from "../../components/JobDetailsEditDrawer";
 import { ReadyPanel } from "../../components/ReadyPanel";
 import { TailoringEditor } from "../../components/TailoringEditor";
+import { useMarkAsAppliedMutation } from "../../hooks/queries/useJobMutations";
 import { useProfile } from "../../hooks/useProfile";
 import type { FilterTab } from "./constants";
 
@@ -73,6 +74,7 @@ export const JobDetailPanel: React.FC<JobDetailPanelProps> = ({
   const [isEditDetailsOpen, setIsEditDetailsOpen] = useState(false);
   const saveTailoringRef = useRef<null | (() => Promise<void>)>(null);
   const previousSelectedJobIdRef = useRef<string | null>(null);
+  const markAsAppliedMutation = useMarkAsAppliedMutation();
 
   const { personName } = useProfile();
 
@@ -227,7 +229,7 @@ export const JobDetailPanel: React.FC<JobDetailPanelProps> = ({
   const handleApply = async () => {
     if (!selectedJob) return;
     try {
-      await api.markAsApplied(selectedJob.id);
+      await markAsAppliedMutation.mutateAsync(selectedJob.id);
       toast.success("Marked as applied");
       await onJobUpdated();
     } catch (error) {
