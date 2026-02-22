@@ -37,9 +37,9 @@ docker compose up -d
 
 ```
 
-## Why JobOps?
+## Why GrantOps?
 
-* **Universal Scraping**: Supports **LinkedIn, Indeed, Glassdoor, Adzuna** + specialized boards (Gradcracker, UK Visa Jobs).
+* **Universal Scraping**: Supports **TK list** + specialized boards (TK specialized).
 * **AI Scoring**: Ranks jobs by fit against *your* profile using your preferred LLM (OpenRouter/OpenAI/Gemini).
 * **Auto-Tailoring**: Generates custom resumes (PDFs) for every application using RxResume v4.
 * **Email Tracking**: Connect Gmail to auto-detect interviews, offers, and rejections.
